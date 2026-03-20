@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Trade Risk Calculator</title>
+    <!-- Tailwind CSS for rapid, beautiful UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        /* Input Styling */
+        .input-group label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        input, select {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Toggle Switch - Fixed Version */
+        .toggle-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .toggle-container {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #475569;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        .toggle-checkbox:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+        .toggle-checkbox:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Result Cards */
+        .result-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #334155; }
+        .highlight-text { color: #3b82f6; }
+        .danger-text { color: #ef4444; }
+        .success-text { color: #10b981; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
+                <p class="text-slate-400 text-sm mt-1">Calculate Position Size & Risk Before Entry</p>
+            </div>
+            <div class="hidden md:block text-right">
+                <div class="text-xs text-slate-500">Current Account Status</div>
+                <div class="text-xl font-bold text-white" id="header-funds">$0.00</div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT COLUMN: INPUTS -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Section 1: Money Management -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Account & Risk
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Account Balance (Deposit)</label>
+                            <div class="relative mt-1">
+                                <span class="absolute left-3 top-2.5 text-slate-400">$</span>
+                                <input type="number" id="balance" class="w-full pl-8 pr-4 py-2 rounded-lg" placeholder="10000" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Risk Amount ($)</label>
+                            <div class="relative mt-1">
+                                <span class="absolute left-3 top-2.5 text-slate-400">$</span>
+                                <input type="number" id="riskAmount" class="w-full pl-8 pr-4 py-2 rounded-lg" placeholder="Auto" oninput="updateRiskFromAmount()">
+                            </div>
+                        </div>
+                        <div class="input-group md:col-span-2">
+                            <label>Risk Per Trade (%)</label>
+                            <div class="relative mt-1">
+                                <input type="range" id="riskPercentRange" min="0.1" max="10" step="0.1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateRiskFromPercent()">
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-xs text-slate-500">0.1%</span>
+                                    <span class="text-sm font-bold text-blue-400" id="riskPercentDisplay">1.0%</span>
+                                    <span class="text-xs text-slate-500">10%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Position Setup -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Trade Setup
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div class="input-group col-span-2 md:col-span-1">
+                            <label>Asset Pair</label>
+                            <input type="text" id="assetName" class="w-full px-4 py-2 rounded-lg uppercase" placeholder="BTC/USD">
+                        </div>
+                        <div class="input-group">
+                            <label>Direction</label>
+                            <select id="direction" class="w-full px-4 py-2 rounded-lg" onchange="calculate()">
+                                <option value="long">Long (Buy)</option>
+                                <option value="short">Short (Sell)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Date</label>
+                            <input type="date" id="tradeDate" class="w-full px-4 py-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-slate-900/50 p-4 rounded-lg">
+                        <div class="input-group">
+                            <label>Entry Price</label>
+                            <input type="number" id="entryPrice" class="w-full px-4 py-2 rounded-lg" placeholder="0.00" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Previous Low / High</label>
+                            <input type="number" id="prevLevel" class="w-full px-4 py-2 rounded-lg" placeholder="0.00" oninput="calculate()">
+                            <span class="text-[10px] text-slate-500">Used for SL calculation</span>
+                        </div>
+                    </div>
+
+                    <!-- ATR Logic -->
+                    <div class="bg-slate-700/30 p-4 rounded-lg border border-slate-600 mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-blue-300">ATR Stop Loss Logic</label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label>ATR Value</label>
+                                <input type="number" id="atrValue" class="w-full px-4 py-2 rounded-lg" placeholder="15.5" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>ATR Multiplier</label>
+                                <input type="number" id="atrMult" class="w-full px-4 py-2 rounded-lg" value="2" placeholder="2" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <span class="text-xs text-slate-400">Calculated Stop Loss:</span>
+                            <div class="text-xl font-mono text-red-400" id="calculatedSL">0.00</div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Manual Stop Loss Override (Optional)</label>
+                        <input type="number" id="manualSL" class="w-full px-4 py-2 rounded-lg border-dashed" placeholder="Leave empty to use ATR calc" oninput="calculate()">
+                    </div>
+                </div>
+
+                <!-- Section 3: Leverage -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            Leverage
+                        </h2>
+                        <!-- Fixed Toggle Switch -->
+                        <label class="toggle-container">
+                            <input type="checkbox" id="leverageToggle" class="toggle-checkbox" onchange="toggleLeverage()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="leverageInputs" class="hidden opacity-50 transition-opacity duration-300">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label>Leverage Ratio (1:X)</label>
+                                <input type="number" id="leverageRatio" class="w-full px-4 py-2 rounded-lg" placeholder="10" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>Margin Mode</label>
+                                <select id="marginMode" class="w-full px-4 py-2 rounded-lg" onchange="calculate()">
+                                    <option value="cross">Cross Margin</option>
+                                    <option value="isolated">Isolated Margin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: RESULTS DASHBOARD -->
+            <div class="lg:col-span-5 space-y-4">
+                
+                <!-- Main Position Card -->
+                <div class="result-card rounded-xl p-6 sticky top-4">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Trade Summary</h3>
+                    
+                    <!-- Position Size -->
+                    <div class="mb-6">
+                        <div class="text-sm text-slate-400">Position Size (Quantity)</div>
+                        <div class="text-4xl font-bold text-white tracking-tight" id="resPositionSize">0.00</div>
+                        <div class="text-xs text-slate-500 mt-1" id="resPositionValue">Total Value: $0.00</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900/50 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Risk Amount</div>
+                            <div class="text-lg font-bold text-red-400" id="resRiskAmount">$0.00</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Risk %</div>
+                            <div class="text-lg font-bold text-white" id="resRiskPercent">0.00%</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-700 my-4">
+
+                    <!-- Leverage Stats -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-slate-400">Liquidation Price</span>
+                            <span class="text-sm font-mono text-yellow-500" id="resLiqPrice">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-slate-400">Max Leverage Possible</span>
+                            <span class="text-sm font-mono text-white" id="resMaxLev">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-slate-400">Recommended Lev</span>
+                            <span class="text-sm font-mono text-green-400" id="resRecLev">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Next Funds -->
+                    <div class="mt-6 pt-6 border-t border-slate-700">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <div class="text-xs text-slate-500 uppercase">Available for Next Trade</div>
+                                <div class="text-xl font-bold text-green-400" id="resNextFunds">$0.00</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-500">Margin Used</div>
+                                <div class="text-sm text-white" id="resMarginUsed">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="bg-blue-900/20 border border-blue-900/50 rounded-xl p-4">
+                    <h4 class="text-blue-400 text-sm font-bold mb-2">Strategy Check</h4>
+                    <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                        <li id="checkRR">Ensure R:R is at least 1:2</li>
+                        <li id="checkRisk">Risk is within your tolerance</li>
+                        <li id="checkLiq">Liquidation is far from Stop Loss</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Date
+        document.getElementById('tradeDate').valueAsDate = new Date();
+
+        // State Variables
+        let balance = 0;
+        let riskPercent = 1.0;
+        let riskAmount = 0;
+
+        // --- Logic Functions ---
+
+        function toggleLeverage() {
+            const toggle = document.getElementById('leverageToggle');
+            const inputs = document.getElementById('leverageInputs');
+
+            if (toggle.checked) {
+                inputs.classList.remove('hidden');
+                inputs.classList.remove('opacity-50');
+            } else {
+                inputs.classList.add('hidden');
+                inputs.classList.add('opacity-50');
+            }
+            calculate();
+        }
+
+        // Bi-directional Risk Calculation
+        function updateRiskFromPercent() {
+            const range = document.getElementById('riskPercentRange');
+            const display = document.getElementById('riskPercentDisplay');
+            riskPercent = parseFloat(range.value);
+            display.innerText = riskPercent.toFixed(1) + '%';
+            
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            riskAmount = balance * (riskPercent / 100);
+            document.getElementById('riskAmount').value = riskAmount.toFixed(2);
+            
+            calculate();
+        }
+
+        function updateRiskFromAmount() {
+            const amountInput = document.getElementById('riskAmount');
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            riskAmount = parseFloat(amountInput.value) || 0;
+
+            if(balance > 0) {
+                riskPercent = (riskAmount / balance) * 100;
+                document.getElementById('riskPercentRange').value = riskPercent;
+                document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
+            }
+            calculate();
+        }
+
+        function calculate() {
+            // 1. Get Inputs
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
+            const prevLevel = parseFloat(document.getElementById('prevLevel').value) || 0;
+            const atrValue = parseFloat(document.getElementById('atrValue').value) || 0;
+            const atrMult = parseFloat(document.getElementById('atrMult').value) || 0;
+            const manualSL = parseFloat(document.getElementById('manualSL').value);
+            const direction = document.getElementById('direction').value;
+            const useLeverage = document.getElementById('leverageToggle').checked;
+            const leverageRatio = parseFloat(document.getElementById('leverageRatio').value) || 1;
+            
+            // Recalculate Risk Amount if Balance changed but user didn't touch Risk inputs recently
+            if(document.activeElement.id !== 'riskAmount' && document.activeElement.id !== 'riskPercentRange') {
+                const currentRiskP = parseFloat(document.getElementById('riskPercentRange').value);
+                riskAmount = balance * (currentRiskP / 100);
+            }
+
+            // 2. Calculate Stop Loss
+            let stopLoss = 0;
+            
+            if (!isNaN(manualSL) && manualSL > 0) {
+                stopLoss = manualSL;
+            } else if (entryPrice > 0 && prevLevel > 0 && atrValue > 0) {
+                if(direction === 'long') {
+                     stopLoss = prevLevel - (atrValue * atrMult); 
+                } else {
+                     stopLoss = prevLevel + (atrValue * atrMult);
+                }
+            } else if (entryPrice > 0) {
+                stopLoss = 0; 
+            }
+
+            // Update UI for Calculated SL
+            document.getElementById('calculatedSL').innerText = stopLoss > 0 ? stopLoss.toFixed(4) : "0.00";
+
+            // 3. Calculate Position Size
+            let positionSize = 0;
+            let priceDiff = 0;
+
+            if (entryPrice > 0 && stopLoss > 0) {
+                priceDiff = Math.abs(entryPrice - stopLoss);
+                if (priceDiff > 0) {
+                    positionSize = riskAmount / priceDiff;
+                }
+            }
+
+            const totalPositionValue = positionSize * entryPrice;
+
+            // 4. Leverage Calculations
+            let liquidationPrice = 0;
+            let marginUsed = totalPositionValue;
+            let maxLev = 0;
+            let recLev = 0;
+
+            if (useLeverage && leverageRatio > 0) {
+                marginUsed = totalPositionValue / leverageRatio;
+                
+                // Simple Liquidation Calc (Futures style approx)
+                if (direction === 'long') {
+                    liquidationPrice = entryPrice * (1 - (1 / leverageRatio));
+                } else {
+                    liquidationPrice = entryPrice * (1 + (1 / leverageRatio));
+                }
+
+                // Max Leverage usable without exceeding risk
+                if(balance > 0) maxLev = totalPositionValue / balance;
+
+                // Recommended Leverage
+                recLev = Math.min(maxLev, 5);
+            }
+
+            // 5. Update UI Results
+            document.getElementById('header-funds').innerText = formatMoney(balance);
+            document.getElementById('resPositionSize').innerText = positionSize.toFixed(4);
+            document.getElementById('resPositionValue').innerText = "Total Value: " + formatMoney(totalPositionValue);
+            
+            document.getElementById('resRiskAmount').innerText = formatMoney(riskAmount);
+            document.getElementById('resRiskPercent').innerText = (balance > 0 ? (riskAmount/balance)*100 : 0).toFixed(2) + "%";
+
+            if (useLeverage) {
+                document.getElementById('resLiqPrice').innerText = liquidationPrice.toFixed(4);
+                document.getElementById('resMaxLev').innerText = maxLev.toFixed(1) + "x";
+                document.getElementById('resRecLev').innerText = recLev.toFixed(1) + "x";
+                document.getElementById('resMarginUsed').innerText = formatMoney(marginUsed);
+                
+                // Check Liq vs SL
+                const liqCheck = document.getElementById('checkLiq');
+                if (direction === 'long' && liquidationPrice > stopLoss) {
+                    liqCheck.innerHTML = "⚠️ <span class='text-red-400'>Liq Price is inside Stop Loss!</span>";
+                } else if (direction === 'short' && liquidationPrice < stopLoss) {
+                    liqCheck.innerHTML = "⚠️ <span class='text-red-400'>Liq Price is inside Stop Loss!</span>";
+                } else {
+                    liqCheck.innerHTML = "✅ Liquidation is safe";
+                    liqCheck.className = "text-xs text-slate-400 list-item";
+                }
+            } else {
+                document.getElementById('resLiqPrice').innerText = "--";
+                document.getElementById('resMaxLev').innerText = "--";
+                document.getElementById('resRecLev').innerText = "--";
+                document.getElementById('resMarginUsed').innerText = formatMoney(marginUsed);
+                document.getElementById('checkLiq').innerText = "Leverage disabled";
+            }
+
+            // Funds for next trade
+            const nextFunds = balance - marginUsed;
+            document.getElementById('resNextFunds').innerText = formatMoney(nextFunds > 0 ? nextFunds : 0);
+        }
+
+        function formatMoney(num) {
+            return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        // Initial Run
+        calculate();
+
+    </script>
+</body>
+</html>
