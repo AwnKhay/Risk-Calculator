@@ -2,23 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pro Trade Risk Calculator</title>
-    <!-- Tailwind CSS for rapid, beautiful UI -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
-        /* Input Styling */
-        .input-group label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .input-group label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
         input, select {
             background-color: #1e293b;
             border: 1px solid #334155;
@@ -31,7 +27,7 @@
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
-        /* Toggle Switch - Fixed Version */
+        /* Toggle Switch */
         .toggle-checkbox {
             position: absolute;
             opacity: 0;
@@ -73,159 +69,329 @@
         .toggle-checkbox:checked + .toggle-slider:before {
             transform: translateX(24px);
         }
-        
+
+        /* Copy/Paste Buttons */
+        .copy-btn, .paste-btn {
+            background: #334155;
+            border: none;
+            color: #94a3b8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.7rem;
+        }
+        .copy-btn:hover, .paste-btn:hover {
+            background: #475569;
+            color: white;
+        }
+        .copy-btn:active, .paste-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Tab System */
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        .tab-btn:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
         /* Result Cards */
-        .result-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #334155; }
-        .highlight-text { color: #3b82f6; }
-        .danger-text { color: #ef4444; }
-        .success-text { color: #10b981; }
+        .result-card { 
+            background: linear-gradient(145deg, #1e293b, #0f172a); 
+            border: 1px solid #334155; 
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .toast.error {
+            background: #ef4444;
+        }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-3 md:p-6">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Copied to clipboard!</div>
 
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <header class="mb-8 flex justify-between items-center">
+        <header class="mb-6 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
-                <p class="text-slate-400 text-sm mt-1">Calculate Position Size & Risk Before Entry</p>
+                <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
+                <p class="text-slate-400 text-xs mt-1">Position Size & Risk Calculator</p>
             </div>
-            <div class="hidden md:block text-right">
-                <div class="text-xs text-slate-500">Current Account Status</div>
-                <div class="text-xl font-bold text-white" id="header-funds">$0.00</div>
+            <div class="text-right">
+                <div class="text-[10px] text-slate-500 uppercase">Account Balance</div>
+                <div class="text-lg md:text-xl font-bold text-white" id="header-funds">$0.00</div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
             <!-- LEFT COLUMN: INPUTS -->
-            <div class="lg:col-span-7 space-y-6">
+            <div class="lg:col-span-7 space-y-4">
                 
                 <!-- Section 1: Money Management -->
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Account & Risk
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div class="input-group">
-                            <label>Account Balance (Deposit)</label>
+                            <label>Account Balance</label>
                             <div class="relative mt-1">
-                                <span class="absolute left-3 top-2.5 text-slate-400">$</span>
-                                <input type="number" id="balance" class="w-full pl-8 pr-4 py-2 rounded-lg" placeholder="10000" oninput="calculate()">
+                                <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
+                                <input type="number" id="balance" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="10000" oninput="calculate()">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Risk Amount ($)</label>
+                            <label>Risk Amount</label>
                             <div class="relative mt-1">
-                                <span class="absolute left-3 top-2.5 text-slate-400">$</span>
-                                <input type="number" id="riskAmount" class="w-full pl-8 pr-4 py-2 rounded-lg" placeholder="Auto" oninput="updateRiskFromAmount()">
+                                <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
+                                <input type="number" id="riskAmount" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="Auto" oninput="updateRiskFromAmount()">
                             </div>
                         </div>
-                        <div class="input-group md:col-span-2">
-                            <label>Risk Per Trade (%)</label>
-                            <div class="relative mt-1">
-                                <input type="range" id="riskPercentRange" min="0.1" max="10" step="0.1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateRiskFromPercent()">
-                                <div class="flex justify-between mt-1">
-                                    <span class="text-xs text-slate-500">0.1%</span>
-                                    <span class="text-sm font-bold text-blue-400" id="riskPercentDisplay">1.0%</span>
-                                    <span class="text-xs text-slate-500">10%</span>
-                                </div>
+                        <div class="input-group col-span-2">
+                            <label>Risk Per Trade: <span class="text-blue-400" id="riskPercentDisplay">1.0%</span></label>
+                            <input type="range" id="riskPercentRange" min="0.1" max="10" step="0.1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer mt-2" oninput="updateRiskFromPercent()">
+                            <div class="flex justify-between mt-1 text-[10px] text-slate-500">
+                                <span>0.1%</span>
+                                <span>5%</span>
+                                <span>10%</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 2: Position Setup -->
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         Trade Setup
                     </h2>
                     
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                        <div class="input-group col-span-2 md:col-span-1">
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="input-group col-span-2">
                             <label>Asset Pair</label>
-                            <input type="text" id="assetName" class="w-full px-4 py-2 rounded-lg uppercase" placeholder="BTC/USD">
+                            <input type="text" id="assetName" class="w-full px-3 py-2 rounded-lg text-sm uppercase" placeholder="BTC/USD">
                         </div>
                         <div class="input-group">
                             <label>Direction</label>
-                            <select id="direction" class="w-full px-4 py-2 rounded-lg" onchange="calculate()">
-                                <option value="long">Long (Buy)</option>
-                                <option value="short">Short (Sell)</option>
+                            <select id="direction" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
+                                <option value="long">📈 Long</option>
+                                <option value="short">📉 Short</option>
                             </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Date</label>
-                            <input type="date" id="tradeDate" class="w-full px-4 py-2 rounded-lg">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-slate-900/50 p-4 rounded-lg">
+                    <div class="grid grid-cols-2 gap-3 mb-3 bg-slate-900/50 p-3 rounded-lg">
                         <div class="input-group">
-                            <label>Entry Price</label>
-                            <input type="number" id="entryPrice" class="w-full px-4 py-2 rounded-lg" placeholder="0.00" oninput="calculate()">
+                            <label class="flex justify-between">
+                                <span>Entry Price</span>
+                                <button class="paste-btn" onclick="pasteToField('entryPrice')">📋 Paste</button>
+                            </label>
+                            <div class="relative mt-1 flex">
+                                <input type="number" id="entryPrice" class="w-full px-3 py-2 rounded-l-lg text-sm" placeholder="0.00" oninput="calculate()">
+                                <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('entryPrice')">📋</button>
+                            </div>
                         </div>
                         <div class="input-group">
-                            <label>Previous Low / High</label>
-                            <input type="number" id="prevLevel" class="w-full px-4 py-2 rounded-lg" placeholder="0.00" oninput="calculate()">
-                            <span class="text-[10px] text-slate-500">Used for SL calculation</span>
+                            <label class="flex justify-between">
+                                <span>Prev. Low/High</span>
+                                <button class="paste-btn" onclick="pasteToField('prevLevel')">📋 Paste</button>
+                            </label>
+                            <div class="relative mt-1 flex">
+                                <input type="number" id="prevLevel" class="w-full px-3 py-2 rounded-l-lg text-sm" placeholder="0.00" oninput="calculate()">
+                                <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('prevLevel')">📋</button>
+                            </div>
+                            <span class="text-[9px] text-slate-500 mt-1">Support/Resistance level</span>
                         </div>
                     </div>
 
                     <!-- ATR Logic -->
-                    <div class="bg-slate-700/30 p-4 rounded-lg border border-slate-600 mb-4">
+                    <div class="bg-slate-700/30 p-3 rounded-lg border border-slate-600 mb-3">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="text-xs font-bold text-blue-300">ATR Stop Loss Logic</label>
+                            <label class="text-[10px] font-bold text-blue-300 uppercase">ATR Stop Loss</label>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-2">
                             <div class="input-group">
                                 <label>ATR Value</label>
-                                <input type="number" id="atrValue" class="w-full px-4 py-2 rounded-lg" placeholder="15.5" oninput="calculate()">
+                                <input type="number" id="atrValue" class="w-full px-3 py-2 rounded-lg text-sm" placeholder="15.5" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>ATR Multiplier</label>
-                                <input type="number" id="atrMult" class="w-full px-4 py-2 rounded-lg" value="2" placeholder="2" oninput="calculate()">
+                                <label>Multiplier</label>
+                                <input type="number" id="atrMult" class="w-full px-3 py-2 rounded-lg text-sm" value="2" placeholder="2" oninput="calculate()">
                             </div>
                         </div>
-                        <div class="mt-3 text-center">
-                            <span class="text-xs text-slate-400">Calculated Stop Loss:</span>
-                            <div class="text-xl font-mono text-red-400" id="calculatedSL">0.00</div>
+                        <div class="mt-2 flex justify-between items-center bg-slate-900/50 p-2 rounded">
+                            <span class="text-[10px] text-slate-400">Stop Loss Price:</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-mono text-red-400" id="calculatedSL">0.0000</span>
+                                <button class="copy-btn" onclick="copyToClipboard('calculatedSL', true)">📋</button>
+                            </div>
                         </div>
                     </div>
 
                     <div class="input-group">
-                        <label>Manual Stop Loss Override (Optional)</label>
-                        <input type="number" id="manualSL" class="w-full px-4 py-2 rounded-lg border-dashed" placeholder="Leave empty to use ATR calc" oninput="calculate()">
+                        <label>Manual Stop Loss (Override)</label>
+                        <div class="relative mt-1 flex">
+                            <input type="number" id="manualSL" class="w-full px-3 py-2 rounded-l-lg text-sm border-dashed" placeholder="Leave empty for ATR calc" oninput="calculate()">
+                            <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('manualSL')">📋</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Section 3: Leverage -->
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                <!-- Section 3: Target / Take Profit -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Target / Take Profit
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div class="input-group">
+                            <label>Risk:Reward Ratio</label>
+                            <div class="relative mt-1">
+                                <span class="absolute left-3 top-2 text-slate-400 text-sm">1:</span>
+                                <input type="number" id="rrRatio" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="2" value="2" step="0.5" oninput="calculateTargetFromRR()">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Target % Gain</label>
+                            <div class="relative mt-1">
+                                <input type="number" id="targetPercent" class="w-full px-3 py-2 rounded-lg text-sm" placeholder="%" step="0.5" oninput="calculateTargetFromPercent()">
+                                <span class="absolute right-3 top-2 text-slate-400 text-sm">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-900/20 border border-green-700/50 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-green-400">Target Price:</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl font-mono text-green-400" id="targetPrice">0.0000</span>
+                                <button class="copy-btn" onclick="copyToClipboard('targetPrice', true)">📋</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs">
+                            <span class="text-slate-400">Potential Profit:</span>
+                            <span class="text-green-400 font-bold" id="potentialProfit">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Leverage -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-white flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            Leverage
+                        <h2 class="text-base font-semibold text-white flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            Leverage & Margin
                         </h2>
-                        <!-- Fixed Toggle Switch -->
                         <label class="toggle-container">
                             <input type="checkbox" id="leverageToggle" class="toggle-checkbox" onchange="toggleLeverage()">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
 
-                    <div id="leverageInputs" class="hidden opacity-50 transition-opacity duration-300">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="input-group">
-                                <label>Leverage Ratio (1:X)</label>
-                                <input type="number" id="leverageRatio" class="w-full px-4 py-2 rounded-lg" placeholder="10" oninput="calculate()">
+                    <!-- Tab System for Spot vs Futures -->
+                    <div id="leverageTabs" class="hidden flex mb-4">
+                        <button class="tab-btn active" id="tabSpot" onclick="switchTab('spot')">📊 Spot / No Lev</button>
+                        <button class="tab-btn" id="tabFutures" onclick="switchTab('futures')">⚡ Futures / Margin</button>
+                    </div>
+
+                    <div id="leverageInputs" class="hidden">
+                        <!-- Spot Mode -->
+                        <div id="spotMode" class="space-y-3">
+                            <div class="bg-blue-900/20 border border-blue-700/50 p-3 rounded-lg">
+                                <p class="text-xs text-blue-300">📌 Spot trading uses your full capital. No liquidation risk, but limited to account balance.</p>
                             </div>
-                            <div class="input-group">
-                                <label>Margin Mode</label>
-                                <select id="marginMode" class="w-full px-4 py-2 rounded-lg" onchange="calculate()">
-                                    <option value="cross">Cross Margin</option>
-                                    <option value="isolated">Isolated Margin</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label>Account Type</label>
+                                    <select id="spotType" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
+                                        <option value="crypto">Crypto Spot</option>
+                                        <option value="stock">Stocks</option>
+                                        <option value="forex">Forex (Cash)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Settlement</label>
+                                    <select id="settlement" class="w-full px-3 py-2 rounded-lg text-sm">
+                                        <option value="T+0">T+0 (Instant)</option>
+                                        <option value="T+1">T+1</option>
+                                        <option value="T+2">T+2</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Futures Mode -->
+                        <div id="futuresMode" class="hidden space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label>Leverage</label>
+                                    <div class="relative mt-1">
+                                        <span class="absolute left-3 top-2 text-slate-400 text-sm">1:</span>
+                                        <input type="number" id="leverageRatio" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="10" value="10" oninput="calculate()">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Margin Mode</label>
+                                    <select id="marginMode" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
+                                        <option value="isolated">Isolated</option>
+                                        <option value="cross">Cross</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label>Instrument</label>
+                                    <select id="instrumentType" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
+                                        <option value="crypto">Crypto Futures</option>
+                                        <option value="forex">Forex CFD</option>
+                                        <option value="indices">Indices</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Contract Size</label>
+                                    <input type="number" id="contractSize" class="w-full px-3 py-2 rounded-lg text-sm" value="1" placeholder="1" oninput="calculate()">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -235,69 +401,118 @@
             <!-- RIGHT COLUMN: RESULTS DASHBOARD -->
             <div class="lg:col-span-5 space-y-4">
                 
-                <!-- Main Position Card -->
-                <div class="result-card rounded-xl p-6 sticky top-4">
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Trade Summary</h3>
+                <!-- Trade Analysis & Warnings -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h4 class="text-slate-300 text-sm font-bold mb-3 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Trade Analysis
+                    </h4>
                     
-                    <!-- Position Size -->
-                    <div class="mb-6">
-                        <div class="text-sm text-slate-400">Position Size (Quantity)</div>
-                        <div class="text-4xl font-bold text-white tracking-tight" id="resPositionSize">0.00</div>
-                        <div class="text-xs text-slate-500 mt-1" id="resPositionValue">Total Value: $0.00</div>
+                    <div class="space-y-2">
+                        <div id="analysisRR" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
+                            <span class="text-slate-500">⚪</span>
+                            <span class="text-slate-400">Enter trade details to analyze</span>
+                        </div>
+                        <div id="analysisRisk" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
+                            <span class="text-slate-500">⚪</span>
+                            <span class="text-slate-400">Risk assessment pending</span>
+                        </div>
+                        <div id="analysisLiq" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
+                            <span class="text-slate-500">⚪</span>
+                            <span class="text-slate-400">Liquidation check pending</span>
+                        </div>
+                        <div id="analysisSize" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
+                            <span class="text-slate-500">⚪</span>
+                            <span class="text-slate-400">Position size validation pending</span>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6">
+                    <!-- Final Recommendation -->
+                    <div id="tradeRecommendation" class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                        <div class="text-[10px] text-slate-500 uppercase mb-1">Recommendation</div>
+                        <div class="text-sm font-bold text-slate-400" id="recText">⏳ Waiting for input...</div>
+                    </div>
+                </div>
+
+                <!-- Main Position Card -->
+                <div class="result-card rounded-xl p-5">
+                    <h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-4">📋 Trade Summary</h3>
+                    
+                    <!-- Position Size -->
+                    <div class="mb-4 pb-4 border-b border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">Position Size</div>
+                        <div class="text-3xl font-bold text-white tracking-tight" id="resPositionSize">0.0000</div>
+                        <div class="text-[10px] text-slate-500 mt-1" id="resPositionValue">Total Value: $0.00</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
                         <div class="bg-slate-900/50 p-3 rounded-lg">
-                            <div class="text-xs text-slate-400">Risk Amount</div>
+                            <div class="text-[10px] text-slate-400 uppercase">Risk Amount</div>
                             <div class="text-lg font-bold text-red-400" id="resRiskAmount">$0.00</div>
                         </div>
                         <div class="bg-slate-900/50 p-3 rounded-lg">
-                            <div class="text-xs text-slate-400">Risk %</div>
+                            <div class="text-[10px] text-slate-400 uppercase">Risk %</div>
                             <div class="text-lg font-bold text-white" id="resRiskPercent">0.00%</div>
+                        </div>
+                    </div>
+
+                    <!-- R:R Display -->
+                    <div class="bg-slate-900/50 p-3 rounded-lg mb-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-slate-400 uppercase">Risk:Reward</span>
+                            <span class="text-lg font-bold text-blue-400" id="resRR">1:0.00</span>
                         </div>
                     </div>
 
                     <hr class="border-slate-700 my-4">
 
                     <!-- Leverage Stats -->
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-slate-400">Liquidation Price</span>
-                            <span class="text-sm font-mono text-yellow-500" id="resLiqPrice">--</span>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
+                            <span class="text-xs text-slate-400">Liquidation Price</span>
+                            <span class="text-xs font-mono text-yellow-500" id="resLiqPrice">--</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-slate-400">Max Leverage Possible</span>
-                            <span class="text-sm font-mono text-white" id="resMaxLev">--</span>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
+                            <span class="text-xs text-slate-400">Margin Required</span>
+                            <span class="text-xs font-mono text-white" id="resMarginUsed">$0.00</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-slate-400">Recommended Lev</span>
-                            <span class="text-sm font-mono text-green-400" id="resRecLev">--</span>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-xs text-slate-400">Max Safe Leverage</span>
+                            <span class="text-xs font-mono text-green-400" id="resMaxLev">--</span>
                         </div>
                     </div>
 
-                    <!-- Next Funds -->
-                    <div class="mt-6 pt-6 border-t border-slate-700">
-                        <div class="flex justify-between items-end">
+                    <!-- Available Funds -->
+                    <div class="bg-green-900/20 border border-green-700/50 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <div class="text-xs text-slate-500 uppercase">Available for Next Trade</div>
-                                <div class="text-xl font-bold text-green-400" id="resNextFunds">$0.00</div>
+                                <div class="text-[10px] text-green-400 uppercase">Available After Trade</div>
+                                <div class="text-lg font-bold text-green-400" id="resNextFunds">$0.00</div>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs text-slate-500">Margin Used</div>
-                                <div class="text-sm text-white" id="resMarginUsed">$0.00</div>
+                                <div class="text-[10px] text-slate-400">Margin Used</div>
+                                <div class="text-xs text-white" id="resMarginDisplay">$0.00</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Tips -->
-                <div class="bg-blue-900/20 border border-blue-900/50 rounded-xl p-4">
-                    <h4 class="text-blue-400 text-sm font-bold mb-2">Strategy Check</h4>
-                    <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
-                        <li id="checkRR">Ensure R:R is at least 1:2</li>
-                        <li id="checkRisk">Risk is within your tolerance</li>
-                        <li id="checkLiq">Liquidation is far from Stop Loss</li>
-                    </ul>
+                <!-- Quick Stats -->
+                <div class="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                            <div class="text-[9px] text-slate-500 uppercase">Win Rate Needed</div>
+                            <div class="text-sm font-bold text-white" id="winRateNeeded">--%</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-slate-500 uppercase">Profit Factor</div>
+                            <div class="text-sm font-bold text-white" id="profitFactor">--</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-slate-500 uppercase">Exp Value</div>
+                            <div class="text-sm font-bold text-white" id="expValue">$0</div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -305,39 +520,102 @@
     </div>
 
     <script>
-        // Initialize Date
-        document.getElementById('tradeDate').valueAsDate = new Date();
+        // Initialize
+        let currentTab = 'spot';
 
-        // State Variables
-        let balance = 0;
-        let riskPercent = 1.0;
-        let riskAmount = 0;
-
-        // --- Logic Functions ---
+        // --- Toggle Functions ---
 
         function toggleLeverage() {
             const toggle = document.getElementById('leverageToggle');
+            const tabs = document.getElementById('leverageTabs');
             const inputs = document.getElementById('leverageInputs');
 
             if (toggle.checked) {
+                tabs.classList.remove('hidden');
                 inputs.classList.remove('hidden');
-                inputs.classList.remove('opacity-50');
+                switchTab(currentTab);
             } else {
+                tabs.classList.add('hidden');
                 inputs.classList.add('hidden');
-                inputs.classList.add('opacity-50');
             }
             calculate();
         }
 
-        // Bi-directional Risk Calculation
+        function switchTab(tab) {
+            currentTab = tab;
+            const spotBtn = document.getElementById('tabSpot');
+            const futuresBtn = document.getElementById('tabFutures');
+            const spotMode = document.getElementById('spotMode');
+            const futuresMode = document.getElementById('futuresMode');
+
+            if (tab === 'spot') {
+                spotBtn.classList.add('active');
+                futuresBtn.classList.remove('active');
+                spotMode.classList.remove('hidden');
+                futuresMode.classList.add('hidden');
+            } else {
+                futuresBtn.classList.add('active');
+                spotBtn.classList.remove('active');
+                futuresMode.classList.remove('hidden');
+                spotMode.classList.add('hidden');
+            }
+            calculate();
+        }
+
+        // --- Copy/Paste Functions ---
+
+        function copyToClipboard(elementId, isResult = false) {
+            let value;
+            if (isResult) {
+                value = document.getElementById(elementId).innerText;
+            } else {
+                value = document.getElementById(elementId).value;
+            }
+            
+            if (value && value !== '0.0000' && value !== '0.00') {
+                navigator.clipboard.writeText(value).then(() => {
+                    showToast('✅ Copied: ' + value);
+                }).catch(() => {
+                    showToast('❌ Copy failed', true);
+                });
+            } else {
+                showToast('⚠️ Nothing to copy', true);
+            }
+        }
+
+        async function pasteToField(elementId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                const cleanValue = text.replace(/[^0-9.]/g, '');
+                if (cleanValue) {
+                    document.getElementById(elementId).value = cleanValue;
+                    showToast('✅ Pasted: ' + cleanValue);
+                    calculate();
+                }
+            } catch (err) {
+                showToast('❌ Paste failed - Manual input required', true);
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 2000);
+        }
+
+        // --- Risk Calculation Functions ---
+
         function updateRiskFromPercent() {
             const range = document.getElementById('riskPercentRange');
             const display = document.getElementById('riskPercentDisplay');
-            riskPercent = parseFloat(range.value);
+            const riskPercent = parseFloat(range.value);
             display.innerText = riskPercent.toFixed(1) + '%';
             
-            balance = parseFloat(document.getElementById('balance').value) || 0;
-            riskAmount = balance * (riskPercent / 100);
+            const balance = parseFloat(document.getElementById('balance').value) || 0;
+            const riskAmount = balance * (riskPercent / 100);
             document.getElementById('riskAmount').value = riskAmount.toFixed(2);
             
             calculate();
@@ -345,54 +623,60 @@
 
         function updateRiskFromAmount() {
             const amountInput = document.getElementById('riskAmount');
-            balance = parseFloat(document.getElementById('balance').value) || 0;
-            riskAmount = parseFloat(amountInput.value) || 0;
+            const balance = parseFloat(document.getElementById('balance').value) || 0;
+            const riskAmount = parseFloat(amountInput.value) || 0;
 
             if(balance > 0) {
-                riskPercent = (riskAmount / balance) * 100;
+                const riskPercent = (riskAmount / balance) * 100;
                 document.getElementById('riskPercentRange').value = riskPercent;
                 document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
             }
             calculate();
         }
 
+        function calculateTargetFromRR() {
+            calculate();
+        }
+
+        function calculateTargetFromPercent() {
+            calculate();
+        }
+
+        // --- Main Calculation Function ---
+
         function calculate() {
-            // 1. Get Inputs
-            balance = parseFloat(document.getElementById('balance').value) || 0;
+            // Get all inputs
+            const balance = parseFloat(document.getElementById('balance').value) || 0;
             const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
             const prevLevel = parseFloat(document.getElementById('prevLevel').value) || 0;
             const atrValue = parseFloat(document.getElementById('atrValue').value) || 0;
             const atrMult = parseFloat(document.getElementById('atrMult').value) || 0;
             const manualSL = parseFloat(document.getElementById('manualSL').value);
             const direction = document.getElementById('direction').value;
+            const rrRatio = parseFloat(document.getElementById('rrRatio').value) || 2;
+            const targetPercent = parseFloat(document.getElementById('targetPercent').value);
             const useLeverage = document.getElementById('leverageToggle').checked;
             const leverageRatio = parseFloat(document.getElementById('leverageRatio').value) || 1;
-            
-            // Recalculate Risk Amount if Balance changed but user didn't touch Risk inputs recently
-            if(document.activeElement.id !== 'riskAmount' && document.activeElement.id !== 'riskPercentRange') {
-                const currentRiskP = parseFloat(document.getElementById('riskPercentRange').value);
-                riskAmount = balance * (currentRiskP / 100);
-            }
+            const marginMode = document.getElementById('marginMode').value;
+            const contractSize = parseFloat(document.getElementById('contractSize').value) || 1;
 
-            // 2. Calculate Stop Loss
+            // Calculate Risk Amount
+            const riskPercent = parseFloat(document.getElementById('riskPercentRange').value) || 1;
+            const riskAmount = balance * (riskPercent / 100);
+
+            // Calculate Stop Loss
             let stopLoss = 0;
-            
             if (!isNaN(manualSL) && manualSL > 0) {
                 stopLoss = manualSL;
             } else if (entryPrice > 0 && prevLevel > 0 && atrValue > 0) {
-                if(direction === 'long') {
-                     stopLoss = prevLevel - (atrValue * atrMult); 
-                } else {
-                     stopLoss = prevLevel + (atrValue * atrMult);
-                }
-            } else if (entryPrice > 0) {
-                stopLoss = 0; 
+                stopLoss = direction === 'long' 
+                    ? prevLevel - (atrValue * atrMult)
+                    : prevLevel + (atrValue * atrMult);
             }
 
-            // Update UI for Calculated SL
-            document.getElementById('calculatedSL').innerText = stopLoss > 0 ? stopLoss.toFixed(4) : "0.00";
+            document.getElementById('calculatedSL').innerText = stopLoss > 0 ? stopLoss.toFixed(4) : "0.0000";
 
-            // 3. Calculate Position Size
+            // Calculate Position Size
             let positionSize = 0;
             let priceDiff = 0;
 
@@ -403,75 +687,230 @@
                 }
             }
 
-            const totalPositionValue = positionSize * entryPrice;
+            const totalPositionValue = positionSize * entryPrice * contractSize;
 
-            // 4. Leverage Calculations
+            // Calculate Target Price
+            let targetPrice = 0;
+            let potentialProfit = 0;
+
+            if (entryPrice > 0 && stopLoss > 0 && priceDiff > 0) {
+                // From RR Ratio
+                if (direction === 'long') {
+                    targetPrice = entryPrice + (priceDiff * rrRatio);
+                } else {
+                    targetPrice = entryPrice - (priceDiff * rrRatio);
+                }
+                
+                // Override with percent if entered
+                if (targetPercent && targetPercent > 0) {
+                    if (direction === 'long') {
+                        targetPrice = entryPrice * (1 + targetPercent / 100);
+                    } else {
+                        targetPrice = entryPrice * (1 - targetPercent / 100);
+                    }
+                }
+
+                potentialProfit = positionSize * Math.abs(targetPrice - entryPrice) * contractSize;
+            }
+
+            document.getElementById('targetPrice').innerText = targetPrice > 0 ? targetPrice.toFixed(4) : "0.0000";
+            document.getElementById('potentialProfit').innerText = formatMoney(potentialProfit);
+
+            // Leverage Calculations
             let liquidationPrice = 0;
             let marginUsed = totalPositionValue;
-            let maxLev = 0;
-            let recLev = 0;
+            let maxSafeLev = 0;
 
-            if (useLeverage && leverageRatio > 0) {
+            if (useLeverage && currentTab === 'futures' && leverageRatio > 0) {
                 marginUsed = totalPositionValue / leverageRatio;
                 
-                // Simple Liquidation Calc (Futures style approx)
+                // Calculate current liquidation price
                 if (direction === 'long') {
                     liquidationPrice = entryPrice * (1 - (1 / leverageRatio));
                 } else {
                     liquidationPrice = entryPrice * (1 + (1 / leverageRatio));
                 }
 
-                // Max Leverage usable without exceeding risk
-                if(balance > 0) maxLev = totalPositionValue / balance;
-
-                // Recommended Leverage
-                recLev = Math.min(maxLev, 5);
+                // Calculate MAX SAFE LEVERAGE based on stop loss distance
+                // This tells you the maximum leverage you can use without getting liquidated before stop loss
+                if (entryPrice > 0 && stopLoss > 0) {
+                    if (direction === 'long') {
+                        // For Long: Liq Price = Entry * (1 - 1/Leverage)
+                        // We want Liq Price < Stop Loss (liquidation below stop loss)
+                        // Max Safe Lev = 1 / (1 - StopLoss/Entry)
+                        const slDistance = (entryPrice - stopLoss) / entryPrice;
+                        if (slDistance > 0) {
+                            maxSafeLev = 1 / slDistance;
+                        }
+                    } else {
+                        // For Short: Liq Price = Entry * (1 + 1/Leverage)
+                        // We want Liq Price > Stop Loss (liquidation above stop loss)
+                        // Max Safe Lev = 1 / (StopLoss/Entry - 1)
+                        const slDistance = (stopLoss - entryPrice) / entryPrice;
+                        if (slDistance > 0) {
+                            maxSafeLev = 1 / slDistance;
+                        }
+                    }
+                }
             }
 
-            // 5. Update UI Results
+            // Update Results
             document.getElementById('header-funds').innerText = formatMoney(balance);
             document.getElementById('resPositionSize').innerText = positionSize.toFixed(4);
             document.getElementById('resPositionValue').innerText = "Total Value: " + formatMoney(totalPositionValue);
-            
             document.getElementById('resRiskAmount').innerText = formatMoney(riskAmount);
-            document.getElementById('resRiskPercent').innerText = (balance > 0 ? (riskAmount/balance)*100 : 0).toFixed(2) + "%";
-
-            if (useLeverage) {
-                document.getElementById('resLiqPrice').innerText = liquidationPrice.toFixed(4);
-                document.getElementById('resMaxLev').innerText = maxLev.toFixed(1) + "x";
-                document.getElementById('resRecLev').innerText = recLev.toFixed(1) + "x";
+            document.getElementById('resRiskPercent').innerText = riskPercent.toFixed(2) + "%";
+            document.getElementById('resRR').innerText = "1:" + rrRatio.toFixed(2);
+            
+            if (useLeverage && currentTab === 'futures') {
+                document.getElementById('resLiqPrice').innerText = liquidationPrice > 0 ? liquidationPrice.toFixed(4) : "--";
                 document.getElementById('resMarginUsed').innerText = formatMoney(marginUsed);
+                document.getElementById('resMarginDisplay').innerText = formatMoney(marginUsed);
                 
-                // Check Liq vs SL
-                const liqCheck = document.getElementById('checkLiq');
-                if (direction === 'long' && liquidationPrice > stopLoss) {
-                    liqCheck.innerHTML = "⚠️ <span class='text-red-400'>Liq Price is inside Stop Loss!</span>";
-                } else if (direction === 'short' && liquidationPrice < stopLoss) {
-                    liqCheck.innerHTML = "⚠️ <span class='text-red-400'>Liq Price is inside Stop Loss!</span>";
+                // Show Max Safe Leverage (whole number)
+                if (maxSafeLev > 0) {
+                    // Add safety buffer of 20% (show 80% of max safe)
+                    const recommendedLev = Math.floor(maxSafeLev * 0.8);
+                    document.getElementById('resMaxLev').innerText = recommendedLev >= 1 ? recommendedLev + "x" : "1x";
                 } else {
-                    liqCheck.innerHTML = "✅ Liquidation is safe";
-                    liqCheck.className = "text-xs text-slate-400 list-item";
+                    document.getElementById('resMaxLev').innerText = "--";
                 }
             } else {
-                document.getElementById('resLiqPrice').innerText = "--";
-                document.getElementById('resMaxLev').innerText = "--";
-                document.getElementById('resRecLev').innerText = "--";
-                document.getElementById('resMarginUsed').innerText = formatMoney(marginUsed);
-                document.getElementById('checkLiq').innerText = "Leverage disabled";
+                document.getElementById('resLiqPrice').innerText = "N/A (Spot)";
+                document.getElementById('resMarginUsed').innerText = formatMoney(totalPositionValue);
+                document.getElementById('resMarginDisplay').innerText = formatMoney(totalPositionValue);
+                document.getElementById('resMaxLev').innerText = "1x (Spot)";
             }
 
-            // Funds for next trade
             const nextFunds = balance - marginUsed;
             document.getElementById('resNextFunds').innerText = formatMoney(nextFunds > 0 ? nextFunds : 0);
+
+            // Update Analysis
+            updateAnalysis(stopLoss, targetPrice, entryPrice, liquidationPrice, 
+                          riskAmount, balance, positionSize, rrRatio, direction, useLeverage, currentTab, maxSafeLev, leverageRatio);
+        }
+
+        function updateAnalysis(stopLoss, targetPrice, entryPrice, liquidationPrice, 
+                               riskAmount, balance, positionSize, rrRatio, direction, useLeverage, currentTab, maxSafeLev, currentLev) {
+            // R:R Analysis
+            const rrEl = document.getElementById('analysisRR');
+            if (rrRatio >= 2) {
+                rrEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Excellent R:R (1:' + rrRatio.toFixed(1) + ')</span>';
+                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
+            } else if (rrRatio >= 1.5) {
+                rrEl.innerHTML = '<span class="text-yellow-500">⚠️</span><span class="text-yellow-400">Acceptable R:R (1:' + rrRatio.toFixed(1) + ')</span>';
+                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-yellow-900/20 border border-yellow-700/30';
+            } else {
+                rrEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">Poor R:R (1:' + rrRatio.toFixed(1) + ') - Skip trade</span>';
+                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
+            }
+
+            // Risk Analysis
+            const riskEl = document.getElementById('analysisRisk');
+            const riskPercent = balance > 0 ? (riskAmount / balance) * 100 : 0;
+            if (riskPercent <= 2) {
+                riskEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Risk within safe limits (' + riskPercent.toFixed(1) + '%)</span>';
+                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
+            } else if (riskPercent <= 5) {
+                riskEl.innerHTML = '<span class="text-yellow-500">⚠️</span><span class="text-yellow-400">Moderate risk (' + riskPercent.toFixed(1) + '%)</span>';
+                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-yellow-900/20 border border-yellow-700/30';
+            } else {
+                riskEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">High risk! (' + riskPercent.toFixed(1) + '%)</span>';
+                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
+            }
+
+            // Liquidation Analysis
+            const liqEl = document.getElementById('analysisLiq');
+            if (useLeverage && currentTab === 'futures' && stopLoss > 0 && liquidationPrice > 0) {
+                const liqSafe = direction === 'long' 
+                    ? liquidationPrice < stopLoss 
+                    : liquidationPrice > stopLoss;
+                
+                // Check if current leverage exceeds max safe
+                const levExceeds = currentLev > maxSafeLev && maxSafeLev > 0;
+                
+                if (liqSafe && !levExceeds) {
+                    liqEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Liquidation safe from SL</span>';
+                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
+                } else if (levExceeds) {
+                    liqEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">⚠️ Leverage too high! Reduce to ' + Math.floor(maxSafeLev * 0.8) + 'x</span>';
+                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
+                } else {
+                    liqEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">⚠️ LIQ INSIDE STOP LOSS!</span>';
+                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
+                }
+            } else {
+                liqEl.innerHTML = '<span class="text-blue-500">ℹ️</span><span class="text-blue-400">No liquidation risk (Spot)</span>';
+                liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-blue-900/20 border border-blue-700/30';
+            }
+
+            // Position Size Analysis
+            const sizeEl = document.getElementById('analysisSize');
+            if (positionSize > 0 && entryPrice > 0) {
+                const positionValue = positionSize * entryPrice;
+                const positionPercent = (positionValue / balance) * 100;
+                if (positionPercent <= 100) {
+                    sizeEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Position size valid (' + positionPercent.toFixed(0) + '% of balance)</span>';
+                    sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
+                } else {
+                    sizeEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">Position exceeds balance! Need leverage</span>';
+                    sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
+                }
+            } else {
+                sizeEl.innerHTML = '<span class="text-slate-500">⚪</span><span class="text-slate-400">Enter price & SL to validate</span>';
+                sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50';
+            }
+
+            // Final Recommendation
+            const recEl = document.getElementById('tradeRecommendation');
+            const recText = document.getElementById('recText');
+            
+            let score = 0;
+            if (rrRatio >= 2) score += 2;
+            else if (rrRatio >= 1.5) score += 1;
+            
+            if (riskPercent <= 2) score += 2;
+            else if (riskPercent <= 5) score += 1;
+            
+            if (useLeverage && currentTab === 'futures') {
+                const liqSafe = direction === 'long' 
+                    ? liquidationPrice < stopLoss 
+                    : liquidationPrice > stopLoss;
+                const levExceeds = currentLev > maxSafeLev && maxSafeLev > 0;
+                if (liqSafe && !levExceeds) score += 2;
+                else score -= 2;
+            } else {
+                score += 2;
+            }
+
+            if (positionSize > 0 && (positionSize * entryPrice) <= balance) score += 2;
+            else if (positionSize > 0) score += 0;
+
+            if (score >= 7) {
+                recText.innerHTML = '<span class="text-green-400">✅ HIGH QUALITY SETUP - Consider taking trade</span>';
+                recEl.className = 'mt-4 p-3 rounded-lg bg-green-900/20 border border-green-700/50';
+            } else if (score >= 5) {
+                recText.innerHTML = '<span class="text-yellow-400">⚠️ ACCEPTABLE - Review before entry</span>';
+                recEl.className = 'mt-4 p-3 rounded-lg bg-yellow-900/20 border border-yellow-700/50';
+            } else {
+                recText.innerHTML = '<span class="text-red-400">❌ POOR SETUP - Skip this trade</span>';
+                recEl.className = 'mt-4 p-3 rounded-lg bg-red-900/20 border border-red-700/50';
+            }
+
+            // Quick Stats
+            const winRateNeeded = 100 / (1 + rrRatio);
+            document.getElementById('winRateNeeded').innerText = winRateNeeded.toFixed(0) + '%';
+            document.getElementById('profitFactor').innerText = rrRatio.toFixed(2);
+            const expValue = (rrRatio * 0.5) - (1 * 0.5);
+            document.getElementById('expValue').innerText = '$' + (expValue * riskAmount).toFixed(0);
         }
 
         function formatMoney(num) {
             return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // Initial Run
+        // Initialize
         calculate();
-
     </script>
 </body>
 </html>
