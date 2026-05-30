@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro Trade Risk Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
@@ -14,903 +14,590 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
-        .input-group label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-        input, select {
+        .input-group label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 4px; display: block; }
+        input[type="number"], input[type="text"], input[type="date"], select {
             background-color: #1e293b;
             border: 1px solid #334155;
             color: white;
             transition: all 0.2s;
+            width: 100%;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
         }
         input:focus, select:focus {
-            border-color: #3b82f6;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        /* Toggle Switch */
-        .toggle-checkbox {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-        .toggle-container {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #475569;
-            transition: 0.3s;
-            border-radius: 26px;
-        }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: 0.3s;
-            border-radius: 50%;
-        }
-        .toggle-checkbox:checked + .toggle-slider {
-            background-color: #3b82f6;
-        }
-        .toggle-checkbox:checked + .toggle-slider:before {
-            transform: translateX(24px);
-        }
-
-        /* Copy/Paste Buttons */
-        .copy-btn, .paste-btn {
-            background: #334155;
-            border: none;
-            color: #94a3b8;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.7rem;
-        }
-        .copy-btn:hover, .paste-btn:hover {
-            background: #475569;
-            color: white;
-        }
-        .copy-btn:active, .paste-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Tab System */
-        .tab-btn {
-            flex: 1;
-            padding: 8px 12px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab-btn:first-child {
-            border-radius: 6px 0 0 6px;
-        }
-        .tab-btn:last-child {
-            border-radius: 0 6px 6px 0;
-        }
-        .tab-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-
-        /* Result Cards */
-        .result-card { 
-            background: linear-gradient(145deg, #1e293b, #0f172a); 
-            border: 1px solid #334155; 
+            border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
         
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #10b981;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 1000;
-        }
-        .toast.show {
-            opacity: 1;
-        }
-        .toast.error {
-            background: #ef4444;
-        }
+        .result-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #334155; }
+        
+        /* Checkbox styling */
+        .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px; cursor: pointer; }
+        .check-item input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #3b82f6; cursor: pointer; }
+        .check-item:hover { color: white; }
+
+        /* Tabs */
+        .tab-btn { padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; }
+        .tab-active { background-color: #3b82f6; color: white; }
+        .tab-inactive { background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .tab-inactive:hover { background-color: #334155; color: white; }
     </style>
 </head>
-<body class="min-h-screen p-3 md:p-6">
+<body class="min-h-screen p-4 md:p-8">
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">Copied to clipboard!</div>
-
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <header class="mb-6 flex justify-between items-center">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
-                <p class="text-slate-400 text-xs mt-1">Position Size & Risk Calculator</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
+                <p class="text-slate-400 text-sm mt-1">Structure, Calculate & Execute</p>
             </div>
-            <div class="text-right">
-                <div class="text-[10px] text-slate-500 uppercase">Account Balance</div>
-                <div class="text-lg md:text-xl font-bold text-white" id="header-funds">$0.00</div>
+            <div class="text-left md:text-right bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                <div class="text-xs text-slate-500 uppercase tracking-wide">Current Account Status</div>
+                <div class="text-xl font-bold text-white" id="header-funds">$0.00</div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <!-- LEFT COLUMN: INPUTS -->
-            <div class="lg:col-span-7 space-y-4">
+            <div class="xl:col-span-8 space-y-6">
                 
-                <!-- Section 1: Money Management -->
-                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Account & Risk
                     </h2>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="input-group">
-                            <label>Account Balance</label>
+                            <label>Account Balance (Deposit)</label>
                             <div class="relative mt-1">
-                                <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
-                                <input type="number" id="balance" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="10000" oninput="calculate()">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
+                                <input type="number" id="balance" style="padding-left: 2rem !important;" placeholder="10000" oninput="calculate()">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Risk Amount</label>
+                            <label>Risk Amount ($)</label>
                             <div class="relative mt-1">
-                                <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
-                                <input type="number" id="riskAmount" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="Auto" oninput="updateRiskFromAmount()">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
+                                <input type="number" id="riskAmount" style="padding-left: 2rem !important;" placeholder="Auto" oninput="updateRiskFromAmount()">
                             </div>
                         </div>
-                        <div class="input-group col-span-2">
-                            <label>Risk Per Trade: <span class="text-blue-400" id="riskPercentDisplay">1.0%</span></label>
-                            <input type="range" id="riskPercentRange" min="0.1" max="10" step="0.1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer mt-2" oninput="updateRiskFromPercent()">
-                            <div class="flex justify-between mt-1 text-[10px] text-slate-500">
-                                <span>0.1%</span>
-                                <span>5%</span>
-                                <span>10%</span>
+                        <div class="input-group md:col-span-2">
+                            <label>Risk Per Trade (%)</label>
+                            <div class="relative mt-2">
+                                <input type="range" id="riskPercentRange" min="0.1" max="20" step="0.1" value="3.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateRiskFromPercent()">
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-xs text-slate-500">0.1%</span>
+                                    <span class="text-sm font-bold text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded" id="riskPercentDisplay">1.0%</span>
+                                    <span class="text-xs text-slate-500">20%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 2: Position Setup -->
-                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        Trade Setup
-                    </h2>
-                    
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <div class="input-group col-span-2">
-                            <label>Asset Pair</label>
-                            <input type="text" id="assetName" class="w-full px-3 py-2 rounded-lg text-sm uppercase" placeholder="BTC/USD">
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            Pre-Trade Checklist
                         </div>
-                        <div class="input-group">
-                            <label>Direction</label>
-                            <select id="direction" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
-                                <option value="long">📈 Long</option>
-                                <option value="short">📉 Short</option>
+                        <div class="flex gap-2 text-sm">
+                            <select id="htfSelect" class="w-24 py-1 px-2">
+                                <option disabled>HTF</option>
+                                <option value="15m">15m</option>
+                                <option value="30m">30m</option>
+                                <option value="1h" selected>1h</option>
+                                <option value="2h">2h</option>
+                                <option value="4h">4h</option>
+                                <option value="1D">1D</option>
+                                <option value="1W">1W</option>
+                                <option value="1M">1M</option>
+                            </select>
+                            <select id="ltfSelect" class="w-24 py-1 px-2">
+                                <option disabled>LTF</option>
+                                <option value="1m">1m</option>
+                                <option value="3m" selected>3m</option>
+                                <option value="5m">5m</option>
+                                <option value="15m">15m</option>
                             </select>
                         </div>
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <div>
+                            <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-900/50 pb-1">BULLISH ALIGNMENT</h3>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Major Trend HTF is UP</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>LTF Aligned with HTF</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Near Support / Lower Channel Band</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Closed Above EMA</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Closed Above DMA (Green)</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Strong Bull Bar State</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Momentum Divergent (Bullish)</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>CVD: Buy Side Dominant</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>CVD Momentum Divergent</span></label>
+                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Recent Price Action Occurred</span></label>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-red-400 mb-3 border-b border-red-900/50 pb-1">BEARISH ALIGNMENT</h3>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Major Trend HTF is DOWN</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>LTF Aligned with HTF</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Near Resistance / Upper Channel Band</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Closed Below EMA</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Closed Below DMA (Red)</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Strong Bear Bar State</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Momentum Divergent (Bearish)</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>CVD: Sell Side Dominant</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>CVD Crossing 0 Line</span></label>
+                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Recent Price Action Occurred</span></label>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 mb-3 bg-slate-900/50 p-3 rounded-lg">
-                        <div class="input-group">
-                            <label class="flex justify-between">
-                                <span>Entry Price</span>
-                                <button class="paste-btn" onclick="pasteToField('entryPrice')">📋 Paste</button>
-                            </label>
-                            <div class="relative mt-1 flex">
-                                <input type="number" id="entryPrice" class="w-full px-3 py-2 rounded-l-lg text-sm" placeholder="0.00" oninput="calculate()">
-                                <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('entryPrice')">📋</button>
+                    <div class="mt-4 bg-slate-900/80 p-4 rounded-lg border border-slate-700">
+                        <h3 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Evaluation Summary</h3>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                            <div class="flex gap-6">
+                                <div class="text-center">
+                                    <div class="text-xs text-slate-500 mb-1">Bullish Score</div>
+                                    <div class="text-xl font-bold text-emerald-400" id="bullScore">0/10</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xs text-slate-500 mb-1">Bearish Score</div>
+                                    <div class="text-xl font-bold text-red-400" id="bearScore">0/10</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="input-group">
-                            <label class="flex justify-between">
-                                <span>Prev. Low/High</span>
-                                <button class="paste-btn" onclick="pasteToField('prevLevel')">📋 Paste</button>
-                            </label>
-                            <div class="relative mt-1 flex">
-                                <input type="number" id="prevLevel" class="w-full px-3 py-2 rounded-l-lg text-sm" placeholder="0.00" oninput="calculate()">
-                                <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('prevLevel')">📋</button>
+                            <div class="text-center sm:text-right w-full sm:w-auto mt-2 sm:mt-0 bg-slate-800 px-4 py-2 rounded border border-slate-700/50">
+                                <div class="text-xs text-slate-500">System Verdict</div>
+                                <div class="text-md font-bold text-slate-400" id="checklistVerdict">Awaiting Input...</div>
                             </div>
-                            <span class="text-[9px] text-slate-500 mt-1">Support/Resistance level</span>
                         </div>
                     </div>
 
-                    <!-- ATR Logic -->
-                    <div class="bg-slate-700/30 p-3 rounded-lg border border-slate-600 mb-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="text-[10px] font-bold text-blue-300 uppercase">ATR Stop Loss</label>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-lg font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            Trade Setup
+                        </h2>
+                        <div class="flex gap-2">
+                            <button id="btnCFD" class="tab-btn tab-active" onclick="switchMode('cfd')">CFD / Margin</button>
+                            <button id="btnSpot" class="tab-btn tab-inactive" onclick="switchMode('spot')">Spot Trading</button>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
+                    </div>
+
+                    <div id="modeCFD" class="space-y-4 block">
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div class="input-group col-span-2 md:col-span-1">
+                                <label>Asset Pair</label>
+                                <input type="text" id="cfdPair" list="cfdPairs" class="uppercase" placeholder="XAUUSD" value="XAUUSD" onchange="autoFillSpread(); calculate()">
+                                <datalist id="cfdPairs">
+                                    <option value="XAUUSD">
+                                    <option value="BTCUSD">
+                                    <option value="EURUSD">
+                                </datalist>
+                            </div>
+                            <div class="input-group">
+                                <label>Direction</label>
+                                <select id="cfdDirection" onchange="calculate()">
+                                    <option value="long">Long</option>
+                                    <option value="short">Short</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Leverage</label>
+                                <div class="relative mt-1">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
+                                    <input type="number" id="cfdLeverage" value="100" step="1" style="padding-left: 2.2rem !important;" oninput="calculate()">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Spread</label>
+                                <input type="number" id="cfdSpread" value="0.28" step="0.01" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>Target R:R</label>
+                                <div class="relative mt-1">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
+                                    <input type="number" id="cfdRR" value="2" step="0.1" style="padding-left: 2.2rem !important;" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                            <div class="input-group">
+                                <label class="text-blue-400">Entry Price</label>
+                                <input type="number" id="cfdEntry" placeholder="0.00" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label class="text-red-400">Stop Loss Price</label>
+                                <input type="number" id="cfdSL" placeholder="0.00" oninput="calculate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="modeSpot" class="space-y-4 hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="input-group">
+                                <label>Asset Pair</label>
+                                <input type="text" id="spotPair" class="uppercase" placeholder="SOL/USDT">
+                            </div>
+                            <div class="input-group">
+                                <label>Direction</label>
+                                <select id="spotDirection" onchange="calculate()">
+                                    <option value="long">Long (Buy)</option>
+                                    <option value="short">Short (Sell)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Target R:R</label>
+                                <div class="relative mt-1">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
+                                    <input type="number" id="spotRR" value="2" step="0.1" style="padding-left: 2.2rem !important;" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                            <div class="input-group">
+                                <label class="text-blue-400">Entry Price</label>
+                                <input type="number" id="spotEntry" placeholder="0.00" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>Previous Low/High</label>
+                                <input type="number" id="spotPrev" placeholder="0.00" oninput="calculate()">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
                             <div class="input-group">
                                 <label>ATR Value</label>
-                                <input type="number" id="atrValue" class="w-full px-3 py-2 rounded-lg text-sm" placeholder="15.5" oninput="calculate()">
+                                <input type="number" id="spotATR" placeholder="0.00" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>Multiplier</label>
-                                <input type="number" id="atrMult" class="w-full px-3 py-2 rounded-lg text-sm" value="2" placeholder="2" oninput="calculate()">
+                                <label>ATR Multiplier</label>
+                                <input type="number" id="spotMult" value="2" step="0.1" oninput="calculate()">
                             </div>
                         </div>
-                        <div class="mt-2 flex justify-between items-center bg-slate-900/50 p-2 rounded">
-                            <span class="text-[10px] text-slate-400">Stop Loss Price:</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-lg font-mono text-red-400" id="calculatedSL">0.0000</span>
-                                <button class="copy-btn" onclick="copyToClipboard('calculatedSL', true)">📋</button>
-                            </div>
+                        <div class="bg-slate-700/30 p-3 rounded text-center border border-slate-600">
+                            <span class="text-xs text-slate-400 uppercase">Calculated Stop Loss</span>
+                            <div class="text-lg font-bold text-red-400" id="spotCalcSL">0.00</div>
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>Manual Stop Loss (Override)</label>
-                        <div class="relative mt-1 flex">
-                            <input type="number" id="manualSL" class="w-full px-3 py-2 rounded-l-lg text-sm border-dashed" placeholder="Leave empty for ATR calc" oninput="calculate()">
-                            <button class="copy-btn rounded-l-none rounded-r-lg" onclick="copyToClipboard('manualSL')">📋</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 3: Target / Take Profit -->
-                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                    <h2 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        Target / Take Profit
-                    </h2>
-                    
-                    <div class="grid grid-cols-2 gap-3 mb-3">
-                        <div class="input-group">
-                            <label>Risk:Reward Ratio</label>
-                            <div class="relative mt-1">
-                                <span class="absolute left-3 top-2 text-slate-400 text-sm">1:</span>
-                                <input type="number" id="rrRatio" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="2" value="2" step="0.5" oninput="calculateTargetFromRR()">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Target % Gain</label>
-                            <div class="relative mt-1">
-                                <input type="number" id="targetPercent" class="w-full px-3 py-2 rounded-lg text-sm" placeholder="%" step="0.5" oninput="calculateTargetFromPercent()">
-                                <span class="absolute right-3 top-2 text-slate-400 text-sm">%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-green-900/20 border border-green-700/50 p-3 rounded-lg">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-green-400">Target Price:</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl font-mono text-green-400" id="targetPrice">0.0000</span>
-                                <button class="copy-btn" onclick="copyToClipboard('targetPrice', true)">📋</button>
-                            </div>
-                        </div>
-                        <div class="flex justify-between mt-2 text-xs">
-                            <span class="text-slate-400">Potential Profit:</span>
-                            <span class="text-green-400 font-bold" id="potentialProfit">$0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 4: Leverage -->
-                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base font-semibold text-white flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            Leverage & Margin
-                        </h2>
-                        <label class="toggle-container">
-                            <input type="checkbox" id="leverageToggle" class="toggle-checkbox" onchange="toggleLeverage()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Tab System for Spot vs Futures -->
-                    <div id="leverageTabs" class="hidden flex mb-4">
-                        <button class="tab-btn active" id="tabSpot" onclick="switchTab('spot')">📊 Spot / No Lev</button>
-                        <button class="tab-btn" id="tabFutures" onclick="switchTab('futures')">⚡ Futures / Margin</button>
-                    </div>
-
-                    <div id="leverageInputs" class="hidden">
-                        <!-- Spot Mode -->
-                        <div id="spotMode" class="space-y-3">
-                            <div class="bg-blue-900/20 border border-blue-700/50 p-3 rounded-lg">
-                                <p class="text-xs text-blue-300">📌 Spot trading uses your full capital. No liquidation risk, but limited to account balance.</p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="input-group">
-                                    <label>Account Type</label>
-                                    <select id="spotType" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
-                                        <option value="crypto">Crypto Spot</option>
-                                        <option value="stock">Stocks</option>
-                                        <option value="forex">Forex (Cash)</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>Settlement</label>
-                                    <select id="settlement" class="w-full px-3 py-2 rounded-lg text-sm">
-                                        <option value="T+0">T+0 (Instant)</option>
-                                        <option value="T+1">T+1</option>
-                                        <option value="T+2">T+2</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Futures Mode -->
-                        <div id="futuresMode" class="hidden space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="input-group">
-                                    <label>Leverage</label>
-                                    <div class="relative mt-1">
-                                        <span class="absolute left-3 top-2 text-slate-400 text-sm">1:</span>
-                                        <input type="number" id="leverageRatio" class="w-full pl-7 pr-3 py-2 rounded-lg text-sm" placeholder="10" value="10" oninput="calculate()">
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <label>Margin Mode</label>
-                                    <select id="marginMode" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
-                                        <option value="isolated">Isolated</option>
-                                        <option value="cross">Cross</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="input-group">
-                                    <label>Instrument</label>
-                                    <select id="instrumentType" class="w-full px-3 py-2 rounded-lg text-sm" onchange="calculate()">
-                                        <option value="crypto">Crypto Futures</option>
-                                        <option value="forex">Forex CFD</option>
-                                        <option value="indices">Indices</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>Contract Size</label>
-                                    <input type="number" id="contractSize" class="w-full px-3 py-2 rounded-lg text-sm" value="1" placeholder="1" oninput="calculate()">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: RESULTS DASHBOARD -->
-            <div class="lg:col-span-5 space-y-4">
+            <div class="xl:col-span-4 space-y-4">
                 
-                <!-- Trade Analysis & Warnings -->
-                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                    <h4 class="text-slate-300 text-sm font-bold mb-3 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Trade Analysis
-                    </h4>
+                <div class="result-card rounded-xl p-6 sticky top-4">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-slate-700 pb-2">Execution Summary</h3>
                     
-                    <div class="space-y-2">
-                        <div id="analysisRR" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
-                            <span class="text-slate-500">⚪</span>
-                            <span class="text-slate-400">Enter trade details to analyze</span>
+                    <div class="mb-6 bg-slate-900/80 p-4 rounded-xl border border-blue-900/50">
+                        <label class="text-xs text-slate-400 uppercase mb-1 block">Position Size (Units / Lots)</label>
+                        <input type="number" id="resSize" class="text-3xl font-bold text-white bg-transparent border-none p-0 focus:ring-0 w-full" value="0.00" oninput="reverseCalculate()">
+                        <div class="text-xs text-slate-500 mt-1 mb-3 flex items-center">
+                            <i class="fas fa-edit mr-1"></i> Edit this to override risk
                         </div>
-                        <div id="analysisRisk" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
-                            <span class="text-slate-500">⚪</span>
-                            <span class="text-slate-400">Risk assessment pending</span>
-                        </div>
-                        <div id="analysisLiq" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
-                            <span class="text-slate-500">⚪</span>
-                            <span class="text-slate-400">Liquidation check pending</span>
-                        </div>
-                        <div id="analysisSize" class="flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50">
-                            <span class="text-slate-500">⚪</span>
-                            <span class="text-slate-400">Position size validation pending</span>
+                        
+                        <div class="pt-3 border-t border-slate-700/50 flex justify-between items-center" id="marginBlock">
+                            <span class="text-xs text-slate-400 uppercase">Margin Required</span>
+                            <span class="text-sm font-bold text-yellow-400" id="resMarginReq">$0.00</span>
                         </div>
                     </div>
 
-                    <!-- Final Recommendation -->
-                    <div id="tradeRecommendation" class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-                        <div class="text-[10px] text-slate-500 uppercase mb-1">Recommendation</div>
-                        <div class="text-sm font-bold text-slate-400" id="recText">⏳ Waiting for input...</div>
-                    </div>
-                </div>
-
-                <!-- Main Position Card -->
-                <div class="result-card rounded-xl p-5">
-                    <h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-4">📋 Trade Summary</h3>
-                    
-                    <!-- Position Size -->
-                    <div class="mb-4 pb-4 border-b border-slate-700">
-                        <div class="text-xs text-slate-400 mb-1">Position Size</div>
-                        <div class="text-3xl font-bold text-white tracking-tight" id="resPositionSize">0.0000</div>
-                        <div class="text-[10px] text-slate-500 mt-1" id="resPositionValue">Total Value: $0.00</div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="bg-slate-900/50 p-3 rounded-lg">
-                            <div class="text-[10px] text-slate-400 uppercase">Risk Amount</div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-400">Risk Amount</div>
                             <div class="text-lg font-bold text-red-400" id="resRiskAmount">$0.00</div>
                         </div>
-                        <div class="bg-slate-900/50 p-3 rounded-lg">
-                            <div class="text-[10px] text-slate-400 uppercase">Risk %</div>
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-400">Risk %</div>
                             <div class="text-lg font-bold text-white" id="resRiskPercent">0.00%</div>
-                        </div>
-                    </div>
-
-                    <!-- R:R Display -->
-                    <div class="bg-slate-900/50 p-3 rounded-lg mb-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-slate-400 uppercase">Risk:Reward</span>
-                            <span class="text-lg font-bold text-blue-400" id="resRR">1:0.00</span>
                         </div>
                     </div>
 
                     <hr class="border-slate-700 my-4">
 
-                    <!-- Leverage Stats -->
-                    <div class="space-y-2 mb-4">
-                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
-                            <span class="text-xs text-slate-400">Liquidation Price</span>
-                            <span class="text-xs font-mono text-yellow-500" id="resLiqPrice">--</span>
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Target Price (Take Profit)</span>
+                            <div class="text-2xl font-bold text-emerald-400 mt-1" id="resTargetPrice">0.00</div>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
-                            <span class="text-xs text-slate-400">Margin Required</span>
-                            <span class="text-xs font-mono text-white" id="resMarginUsed">$0.00</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2">
-                            <span class="text-xs text-slate-400">Max Safe Leverage</span>
-                            <span class="text-xs font-mono text-green-400" id="resMaxLev">--</span>
-                        </div>
-                    </div>
-
-                    <!-- Available Funds -->
-                    <div class="bg-green-900/20 border border-green-700/50 p-3 rounded-lg">
-                        <div class="flex justify-between items-center">
+                        
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <div class="text-[10px] text-green-400 uppercase">Available After Trade</div>
-                                <div class="text-lg font-bold text-green-400" id="resNextFunds">$0.00</div>
+                                <span class="text-xs text-slate-500">Reward / Profit</span>
+                                <div class="text-md font-mono text-emerald-400" id="resProfit">$0.00</div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-slate-400">Margin Used</div>
-                                <div class="text-xs text-white" id="resMarginDisplay">$0.00</div>
+                            <div>
+                                <span class="text-xs text-slate-500">Target % Move (to hit TP)</span>
+                                <div class="text-md font-mono text-emerald-400" id="resTargetPct">0.00%</div>
                             </div>
+                        </div>
+                        
+                        <div>
+                            <span class="text-xs text-slate-500">Stop Loss Distance</span>
+                            <div class="text-md font-mono text-red-400" id="resSLDist">0.00</div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Quick Stats -->
-                <div class="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                            <div class="text-[9px] text-slate-500 uppercase">Win Rate Needed</div>
-                            <div class="text-sm font-bold text-white" id="winRateNeeded">--%</div>
-                        </div>
-                        <div>
-                            <div class="text-[9px] text-slate-500 uppercase">Profit Factor</div>
-                            <div class="text-sm font-bold text-white" id="profitFactor">--</div>
-                        </div>
-                        <div>
-                            <div class="text-[9px] text-slate-500 uppercase">Exp Value</div>
-                            <div class="text-sm font-bold text-white" id="expValue">$0</div>
-                        </div>
-                    </div>
+                    <button class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2" onclick="alert('Trade Data ready for Google Sheets API!')">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                        Export Setup
+                    </button>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize
-        let currentTab = 'spot';
+        // --- State Management ---
+        let currentMode = 'cfd'; // 'cfd' or 'spot'
+        let balance = 0;
+        let riskPercent = 1.0;
+        let riskAmount = 0;
+        
+        let calculatedDistance = 0;
+        let isReverseCalculating = false;
 
-        // --- Toggle Functions ---
-
-        function toggleLeverage() {
-            const toggle = document.getElementById('leverageToggle');
-            const tabs = document.getElementById('leverageTabs');
-            const inputs = document.getElementById('leverageInputs');
-
-            if (toggle.checked) {
-                tabs.classList.remove('hidden');
-                inputs.classList.remove('hidden');
-                switchTab(currentTab);
-            } else {
-                tabs.classList.add('hidden');
-                inputs.classList.add('hidden');
-            }
-            calculate();
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            const spotBtn = document.getElementById('tabSpot');
-            const futuresBtn = document.getElementById('tabFutures');
-            const spotMode = document.getElementById('spotMode');
-            const futuresMode = document.getElementById('futuresMode');
-
-            if (tab === 'spot') {
-                spotBtn.classList.add('active');
-                futuresBtn.classList.remove('active');
-                spotMode.classList.remove('hidden');
-                futuresMode.classList.add('hidden');
-            } else {
-                futuresBtn.classList.add('active');
-                spotBtn.classList.remove('active');
-                futuresMode.classList.remove('hidden');
-                spotMode.classList.add('hidden');
-            }
-            calculate();
-        }
-
-        // --- Copy/Paste Functions ---
-
-        function copyToClipboard(elementId, isResult = false) {
-            let value;
-            if (isResult) {
-                value = document.getElementById(elementId).innerText;
-            } else {
-                value = document.getElementById(elementId).value;
-            }
+        // --- Core UI Functions ---
+        function switchMode(mode) {
+            currentMode = mode;
             
-            if (value && value !== '0.0000' && value !== '0.00') {
-                navigator.clipboard.writeText(value).then(() => {
-                    showToast('✅ Copied: ' + value);
-                }).catch(() => {
-                    showToast('❌ Copy failed', true);
-                });
+            const btnCFD = document.getElementById('btnCFD');
+            const btnSpot = document.getElementById('btnSpot');
+            const secCFD = document.getElementById('modeCFD');
+            const secSpot = document.getElementById('modeSpot');
+
+            if (mode === 'cfd') {
+                btnCFD.className = 'tab-btn tab-active';
+                btnSpot.className = 'tab-btn tab-inactive';
+                secCFD.style.display = 'block';
+                secSpot.style.display = 'none';
             } else {
-                showToast('⚠️ Nothing to copy', true);
+                btnCFD.className = 'tab-btn tab-inactive';
+                btnSpot.className = 'tab-btn tab-active';
+                secCFD.style.display = 'none';
+                secSpot.style.display = 'block';
             }
+            calculate();
         }
 
-        async function pasteToField(elementId) {
-            try {
-                const text = await navigator.clipboard.readText();
-                const cleanValue = text.replace(/[^0-9.]/g, '');
-                if (cleanValue) {
-                    document.getElementById(elementId).value = cleanValue;
-                    showToast('✅ Pasted: ' + cleanValue);
-                    calculate();
-                }
-            } catch (err) {
-                showToast('❌ Paste failed - Manual input required', true);
+        function autoFillSpread() {
+            const pair = document.getElementById('cfdPair').value.toUpperCase();
+            const spreadInput = document.getElementById('cfdSpread');
+            if (pair.includes('XAU')) spreadInput.value = 0.28;
+            else if (pair.includes('BTC')) spreadInput.value = 0.14;
+        }
+
+        // --- Checklist Evaluation ---
+        window.evaluateChecklist = function() {
+            const bullScore = document.querySelectorAll('.bull-check:checked').length;
+            const bearScore = document.querySelectorAll('.bear-check:checked').length;
+            
+            document.getElementById('bullScore').innerText = bullScore + '/10';
+            document.getElementById('bearScore').innerText = bearScore + '/10';
+            
+            const verdict = document.getElementById('checklistVerdict');
+            
+            if (bullScore === 0 && bearScore === 0) {
+                verdict.innerHTML = 'Awaiting Input...';
+                verdict.className = 'text-md font-bold text-slate-400';
+            } else if (bullScore >= 7 && bearScore <= 3) {
+                verdict.innerHTML = 'Strong Long Bias ✅';
+                verdict.className = 'text-md font-bold text-emerald-400';
+            } else if (bearScore >= 7 && bullScore <= 3) {
+                verdict.innerHTML = 'Strong Short Bias ✅';
+                verdict.className = 'text-md font-bold text-red-400';
+            } else if (bullScore > bearScore && bullScore >= 5) {
+                verdict.innerHTML = 'Leaning Bullish ↗️';
+                verdict.className = 'text-md font-bold text-emerald-300';
+            } else if (bearScore > bullScore && bearScore >= 5) {
+                verdict.innerHTML = 'Leaning Bearish ↘️';
+                verdict.className = 'text-md font-bold text-red-300';
+            } else {
+                verdict.innerHTML = 'Mixed / Choppy 🛑';
+                verdict.className = 'text-md font-bold text-yellow-400';
             }
-        }
+        };
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.className = 'toast show' + (isError ? ' error' : '');
-            setTimeout(() => {
-                toast.className = 'toast';
-            }, 2000);
-        }
-
-        // --- Risk Calculation Functions ---
-
+        // --- Risk Functions ---
         function updateRiskFromPercent() {
+            if(isReverseCalculating) return;
             const range = document.getElementById('riskPercentRange');
-            const display = document.getElementById('riskPercentDisplay');
-            const riskPercent = parseFloat(range.value);
-            display.innerText = riskPercent.toFixed(1) + '%';
+            riskPercent = parseFloat(range.value);
+            document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
             
-            const balance = parseFloat(document.getElementById('balance').value) || 0;
-            const riskAmount = balance * (riskPercent / 100);
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            riskAmount = balance * (riskPercent / 100);
             document.getElementById('riskAmount').value = riskAmount.toFixed(2);
             
             calculate();
         }
 
         function updateRiskFromAmount() {
-            const amountInput = document.getElementById('riskAmount');
-            const balance = parseFloat(document.getElementById('balance').value) || 0;
-            const riskAmount = parseFloat(amountInput.value) || 0;
+            if(isReverseCalculating) return;
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            riskAmount = parseFloat(document.getElementById('riskAmount').value) || 0;
 
             if(balance > 0) {
-                const riskPercent = (riskAmount / balance) * 100;
-                document.getElementById('riskPercentRange').value = riskPercent;
+                riskPercent = (riskAmount / balance) * 100;
+                document.getElementById('riskPercentRange').value = Math.min(riskPercent, 20);
                 document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
             }
             calculate();
         }
 
-        function calculateTargetFromRR() {
-            calculate();
+        // --- Reverse Calculation (Lot Size Override) ---
+        function reverseCalculate() {
+            isReverseCalculating = true;
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            const customSize = parseFloat(document.getElementById('resSize').value) || 0;
+
+            if(calculatedDistance > 0) {
+                riskAmount = customSize * calculatedDistance;
+                document.getElementById('riskAmount').value = riskAmount.toFixed(2);
+                
+                if(balance > 0) {
+                    riskPercent = (riskAmount / balance) * 100;
+                    document.getElementById('riskPercentRange').value = Math.min(riskPercent, 20);
+                    document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(2) + '%';
+                }
+            }
+            
+            // Re-fetch variables to pass safely to UI update
+            let entry = 0, rr = 2, direction = 'long', leverage = 1;
+            if (currentMode === 'cfd') {
+                entry = parseFloat(document.getElementById('cfdEntry').value) || 0;
+                rr = parseFloat(document.getElementById('cfdRR').value) || 2;
+                direction = document.getElementById('cfdDirection').value;
+                leverage = parseFloat(document.getElementById('cfdLeverage').value) || 1;
+            } else {
+                entry = parseFloat(document.getElementById('spotEntry').value) || 0;
+                rr = parseFloat(document.getElementById('spotRR').value) || 2;
+                direction = document.getElementById('spotDirection').value;
+                leverage = 1;
+            }
+
+            calculateUI(customSize, entry, rr, direction, leverage);
+            isReverseCalculating = false;
         }
 
-        function calculateTargetFromPercent() {
-            calculate();
-        }
-
-        // --- Main Calculation Function ---
-
+        // --- Main Calculation Engine ---
         function calculate() {
-            // Get all inputs
-            const balance = parseFloat(document.getElementById('balance').value) || 0;
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
-            const prevLevel = parseFloat(document.getElementById('prevLevel').value) || 0;
-            const atrValue = parseFloat(document.getElementById('atrValue').value) || 0;
-            const atrMult = parseFloat(document.getElementById('atrMult').value) || 0;
-            const manualSL = parseFloat(document.getElementById('manualSL').value);
-            const direction = document.getElementById('direction').value;
-            const rrRatio = parseFloat(document.getElementById('rrRatio').value) || 2;
-            const targetPercent = parseFloat(document.getElementById('targetPercent').value);
-            const useLeverage = document.getElementById('leverageToggle').checked;
-            const leverageRatio = parseFloat(document.getElementById('leverageRatio').value) || 1;
-            const marginMode = document.getElementById('marginMode').value;
-            const contractSize = parseFloat(document.getElementById('contractSize').value) || 1;
-
-            // Calculate Risk Amount
-            const riskPercent = parseFloat(document.getElementById('riskPercentRange').value) || 1;
-            const riskAmount = balance * (riskPercent / 100);
-
-            // Calculate Stop Loss
-            let stopLoss = 0;
-            if (!isNaN(manualSL) && manualSL > 0) {
-                stopLoss = manualSL;
-            } else if (entryPrice > 0 && prevLevel > 0 && atrValue > 0) {
-                stopLoss = direction === 'long' 
-                    ? prevLevel - (atrValue * atrMult)
-                    : prevLevel + (atrValue * atrMult);
-            }
-
-            document.getElementById('calculatedSL').innerText = stopLoss > 0 ? stopLoss.toFixed(4) : "0.0000";
-
-            // Calculate Position Size
-            let positionSize = 0;
-            let priceDiff = 0;
-
-            if (entryPrice > 0 && stopLoss > 0) {
-                priceDiff = Math.abs(entryPrice - stopLoss);
-                if (priceDiff > 0) {
-                    positionSize = riskAmount / priceDiff;
-                }
-            }
-
-            const totalPositionValue = positionSize * entryPrice * contractSize;
-
-            // Calculate Target Price
-            let targetPrice = 0;
-            let potentialProfit = 0;
-
-            if (entryPrice > 0 && stopLoss > 0 && priceDiff > 0) {
-                // From RR Ratio
-                if (direction === 'long') {
-                    targetPrice = entryPrice + (priceDiff * rrRatio);
-                } else {
-                    targetPrice = entryPrice - (priceDiff * rrRatio);
-                }
-                
-                // Override with percent if entered
-                if (targetPercent && targetPercent > 0) {
-                    if (direction === 'long') {
-                        targetPrice = entryPrice * (1 + targetPercent / 100);
-                    } else {
-                        targetPrice = entryPrice * (1 - targetPercent / 100);
-                    }
-                }
-
-                potentialProfit = positionSize * Math.abs(targetPrice - entryPrice) * contractSize;
-            }
-
-            document.getElementById('targetPrice').innerText = targetPrice > 0 ? targetPrice.toFixed(4) : "0.0000";
-            document.getElementById('potentialProfit').innerText = formatMoney(potentialProfit);
-
-            // Leverage Calculations
-            let liquidationPrice = 0;
-            let marginUsed = totalPositionValue;
-            let maxSafeLev = 0;
-
-            if (useLeverage && currentTab === 'futures' && leverageRatio > 0) {
-                marginUsed = totalPositionValue / leverageRatio;
-                
-                // Calculate current liquidation price
-                if (direction === 'long') {
-                    liquidationPrice = entryPrice * (1 - (1 / leverageRatio));
-                } else {
-                    liquidationPrice = entryPrice * (1 + (1 / leverageRatio));
-                }
-
-                // Calculate MAX SAFE LEVERAGE based on stop loss distance
-                // This tells you the maximum leverage you can use without getting liquidated before stop loss
-                if (entryPrice > 0 && stopLoss > 0) {
-                    if (direction === 'long') {
-                        // For Long: Liq Price = Entry * (1 - 1/Leverage)
-                        // We want Liq Price < Stop Loss (liquidation below stop loss)
-                        // Max Safe Lev = 1 / (1 - StopLoss/Entry)
-                        const slDistance = (entryPrice - stopLoss) / entryPrice;
-                        if (slDistance > 0) {
-                            maxSafeLev = 1 / slDistance;
-                        }
-                    } else {
-                        // For Short: Liq Price = Entry * (1 + 1/Leverage)
-                        // We want Liq Price > Stop Loss (liquidation above stop loss)
-                        // Max Safe Lev = 1 / (StopLoss/Entry - 1)
-                        const slDistance = (stopLoss - entryPrice) / entryPrice;
-                        if (slDistance > 0) {
-                            maxSafeLev = 1 / slDistance;
-                        }
-                    }
-                }
-            }
-
-            // Update Results
-            document.getElementById('header-funds').innerText = formatMoney(balance);
-            document.getElementById('resPositionSize').innerText = positionSize.toFixed(4);
-            document.getElementById('resPositionValue').innerText = "Total Value: " + formatMoney(totalPositionValue);
-            document.getElementById('resRiskAmount').innerText = formatMoney(riskAmount);
-            document.getElementById('resRiskPercent').innerText = riskPercent.toFixed(2) + "%";
-            document.getElementById('resRR').innerText = "1:" + rrRatio.toFixed(2);
+            if(isReverseCalculating) return;
             
-            if (useLeverage && currentTab === 'futures') {
-                document.getElementById('resLiqPrice').innerText = liquidationPrice > 0 ? liquidationPrice.toFixed(4) : "--";
-                document.getElementById('resMarginUsed').innerText = formatMoney(marginUsed);
-                document.getElementById('resMarginDisplay').innerText = formatMoney(marginUsed);
-                
-                // Show Max Safe Leverage (whole number)
-                if (maxSafeLev > 0) {
-                    // Add safety buffer of 20% (show 80% of max safe)
-                    const recommendedLev = Math.floor(maxSafeLev * 0.8);
-                    document.getElementById('resMaxLev').innerText = recommendedLev >= 1 ? recommendedLev + "x" : "1x";
-                } else {
-                    document.getElementById('resMaxLev').innerText = "--";
-                }
-            } else {
-                document.getElementById('resLiqPrice').innerText = "N/A (Spot)";
-                document.getElementById('resMarginUsed').innerText = formatMoney(totalPositionValue);
-                document.getElementById('resMarginDisplay').innerText = formatMoney(totalPositionValue);
-                document.getElementById('resMaxLev').innerText = "1x (Spot)";
+            balance = parseFloat(document.getElementById('balance').value) || 0;
+            
+            if(document.activeElement.id === 'balance') {
+                riskAmount = balance * (parseFloat(document.getElementById('riskPercentRange').value) / 100);
+                document.getElementById('riskAmount').value = riskAmount.toFixed(2);
             }
 
-            const nextFunds = balance - marginUsed;
-            document.getElementById('resNextFunds').innerText = formatMoney(nextFunds > 0 ? nextFunds : 0);
+            let entry = 0, sl = 0, rr = 2, direction = 'long', leverage = 1;
+            calculatedDistance = 0;
+            
+            if (currentMode === 'cfd') {
+                entry = parseFloat(document.getElementById('cfdEntry').value) || 0;
+                sl = parseFloat(document.getElementById('cfdSL').value) || 0;
+                const spread = parseFloat(document.getElementById('cfdSpread').value) || 0;
+                rr = parseFloat(document.getElementById('cfdRR').value) || 2;
+                direction = document.getElementById('cfdDirection').value;
+                leverage = parseFloat(document.getElementById('cfdLeverage').value) || 1;
 
-            // Update Analysis
-            updateAnalysis(stopLoss, targetPrice, entryPrice, liquidationPrice, 
-                          riskAmount, balance, positionSize, rrRatio, direction, useLeverage, currentTab, maxSafeLev, leverageRatio);
+                if (entry > 0 && sl > 0) {
+                    calculatedDistance = Math.abs(entry - sl) + spread;
+                }
+
+            } else if (currentMode === 'spot') {
+                entry = parseFloat(document.getElementById('spotEntry').value) || 0;
+                const prevLevel = parseFloat(document.getElementById('spotPrev').value) || 0;
+                const atr = parseFloat(document.getElementById('spotATR').value) || 0;
+                const atrMult = parseFloat(document.getElementById('spotMult').value) || 0;
+                rr = parseFloat(document.getElementById('spotRR').value) || 2;
+                direction = document.getElementById('spotDirection').value;
+                leverage = 1; // Spot has no leverage
+
+                if (entry > 0 && prevLevel > 0 && atr > 0) {
+                    sl = direction === 'long' ? (prevLevel - (atr * atrMult)) : (prevLevel + (atr * atrMult));
+                    document.getElementById('spotCalcSL').innerText = sl.toFixed(4);
+                    calculatedDistance = Math.abs(entry - sl);
+                } else {
+                    document.getElementById('spotCalcSL').innerText = "0.00";
+                }
+            }
+
+            let positionSize = 0;
+            if (calculatedDistance > 0 && riskAmount > 0) {
+                positionSize = riskAmount / calculatedDistance;
+            }
+
+            document.getElementById('resSize').value = positionSize > 0 ? positionSize.toFixed(4) : "0.00";
+            
+            calculateUI(positionSize, entry, rr, direction, leverage);
         }
 
-        function updateAnalysis(stopLoss, targetPrice, entryPrice, liquidationPrice, 
-                               riskAmount, balance, positionSize, rrRatio, direction, useLeverage, currentTab, maxSafeLev, currentLev) {
-            // R:R Analysis
-            const rrEl = document.getElementById('analysisRR');
-            if (rrRatio >= 2) {
-                rrEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Excellent R:R (1:' + rrRatio.toFixed(1) + ')</span>';
-                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
-            } else if (rrRatio >= 1.5) {
-                rrEl.innerHTML = '<span class="text-yellow-500">⚠️</span><span class="text-yellow-400">Acceptable R:R (1:' + rrRatio.toFixed(1) + ')</span>';
-                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-yellow-900/20 border border-yellow-700/30';
-            } else {
-                rrEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">Poor R:R (1:' + rrRatio.toFixed(1) + ') - Skip trade</span>';
-                rrEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
-            }
+        // --- Updates Results HTML ---
+        function calculateUI(positionSize, entry, rr, direction, leverage) {
+            const safeSize = positionSize || 0;
+            
+            document.getElementById('header-funds').innerText = formatMoney(balance);
+            document.getElementById('resRiskAmount').innerText = formatMoney(riskAmount);
+            document.getElementById('resRiskPercent').innerText = (balance > 0 ? (riskAmount/balance)*100 : 0).toFixed(2) + "%";
+            document.getElementById('resSLDist').innerText = calculatedDistance > 0 ? calculatedDistance.toFixed(4) : "0.00";
 
-            // Risk Analysis
-            const riskEl = document.getElementById('analysisRisk');
-            const riskPercent = balance > 0 ? (riskAmount / balance) * 100 : 0;
-            if (riskPercent <= 2) {
-                riskEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Risk within safe limits (' + riskPercent.toFixed(1) + '%)</span>';
-                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
-            } else if (riskPercent <= 5) {
-                riskEl.innerHTML = '<span class="text-yellow-500">⚠️</span><span class="text-yellow-400">Moderate risk (' + riskPercent.toFixed(1) + '%)</span>';
-                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-yellow-900/20 border border-yellow-700/30';
-            } else {
-                riskEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">High risk! (' + riskPercent.toFixed(1) + '%)</span>';
-                riskEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
-            }
+            let target = 0;
+            let profit = 0;
+            let pctMove = 0;
+            let marginReq = 0;
 
-            // Liquidation Analysis
-            const liqEl = document.getElementById('analysisLiq');
-            if (useLeverage && currentTab === 'futures' && stopLoss > 0 && liquidationPrice > 0) {
-                const liqSafe = direction === 'long' 
-                    ? liquidationPrice < stopLoss 
-                    : liquidationPrice > stopLoss;
+            if(entry > 0 && calculatedDistance > 0 && safeSize > 0) {
+                const targetDistance = calculatedDistance * rr;
                 
-                // Check if current leverage exceeds max safe
-                const levExceeds = currentLev > maxSafeLev && maxSafeLev > 0;
+                if(direction === 'long') {
+                    target = entry + targetDistance;
+                    pctMove = ((target - entry) / entry) * 100;
+                } else {
+                    target = entry - targetDistance;
+                    pctMove = ((entry - target) / entry) * 100; 
+                }
                 
-                if (liqSafe && !levExceeds) {
-                    liqEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Liquidation safe from SL</span>';
-                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
-                } else if (levExceeds) {
-                    liqEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">⚠️ Leverage too high! Reduce to ' + Math.floor(maxSafeLev * 0.8) + 'x</span>';
-                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
-                } else {
-                    liqEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">⚠️ LIQ INSIDE STOP LOSS!</span>';
-                    liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
-                }
-            } else {
-                liqEl.innerHTML = '<span class="text-blue-500">ℹ️</span><span class="text-blue-400">No liquidation risk (Spot)</span>';
-                liqEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-blue-900/20 border border-blue-700/30';
+                profit = riskAmount * rr;
+                
+                // Calculate Required Margin
+                const totalValue = safeSize * entry;
+                marginReq = totalValue / leverage;
             }
 
-            // Position Size Analysis
-            const sizeEl = document.getElementById('analysisSize');
-            if (positionSize > 0 && entryPrice > 0) {
-                const positionValue = positionSize * entryPrice;
-                const positionPercent = (positionValue / balance) * 100;
-                if (positionPercent <= 100) {
-                    sizeEl.innerHTML = '<span class="text-green-500">✅</span><span class="text-green-400">Position size valid (' + positionPercent.toFixed(0) + '% of balance)</span>';
-                    sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-green-900/20 border border-green-700/30';
-                } else {
-                    sizeEl.innerHTML = '<span class="text-red-500">❌</span><span class="text-red-400">Position exceeds balance! Need leverage</span>';
-                    sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-red-900/20 border border-red-700/30';
-                }
+            // Update Margin Display & Warning
+            const marginEl = document.getElementById('resMarginReq');
+            if (marginReq > balance && balance > 0) {
+                marginEl.classList.remove('text-yellow-400');
+                marginEl.classList.add('text-red-500');
+                marginEl.innerHTML = formatMoney(marginReq) + ' <i class="fas fa-exclamation-triangle ml-1" title="Margin exceeds account balance!"></i>';
             } else {
-                sizeEl.innerHTML = '<span class="text-slate-500">⚪</span><span class="text-slate-400">Enter price & SL to validate</span>';
-                sizeEl.className = 'flex items-center gap-2 text-xs p-2 rounded bg-slate-900/50';
+                marginEl.classList.remove('text-red-500');
+                marginEl.classList.add('text-yellow-400');
+                marginEl.innerHTML = formatMoney(marginReq);
             }
-
-            // Final Recommendation
-            const recEl = document.getElementById('tradeRecommendation');
-            const recText = document.getElementById('recText');
             
-            let score = 0;
-            if (rrRatio >= 2) score += 2;
-            else if (rrRatio >= 1.5) score += 1;
-            
-            if (riskPercent <= 2) score += 2;
-            else if (riskPercent <= 5) score += 1;
-            
-            if (useLeverage && currentTab === 'futures') {
-                const liqSafe = direction === 'long' 
-                    ? liquidationPrice < stopLoss 
-                    : liquidationPrice > stopLoss;
-                const levExceeds = currentLev > maxSafeLev && maxSafeLev > 0;
-                if (liqSafe && !levExceeds) score += 2;
-                else score -= 2;
-            } else {
-                score += 2;
-            }
+            // Adjust Label Text depending on Spot vs Margin mode
+            const marginBlock = document.getElementById('marginBlock');
+            marginBlock.firstElementChild.innerText = currentMode === 'spot' ? 'Total Position Cost' : 'Margin Required';
 
-            if (positionSize > 0 && (positionSize * entryPrice) <= balance) score += 2;
-            else if (positionSize > 0) score += 0;
-
-            if (score >= 7) {
-                recText.innerHTML = '<span class="text-green-400">✅ HIGH QUALITY SETUP - Consider taking trade</span>';
-                recEl.className = 'mt-4 p-3 rounded-lg bg-green-900/20 border border-green-700/50';
-            } else if (score >= 5) {
-                recText.innerHTML = '<span class="text-yellow-400">⚠️ ACCEPTABLE - Review before entry</span>';
-                recEl.className = 'mt-4 p-3 rounded-lg bg-yellow-900/20 border border-yellow-700/50';
-            } else {
-                recText.innerHTML = '<span class="text-red-400">❌ POOR SETUP - Skip this trade</span>';
-                recEl.className = 'mt-4 p-3 rounded-lg bg-red-900/20 border border-red-700/50';
-            }
-
-            // Quick Stats
-            const winRateNeeded = 100 / (1 + rrRatio);
-            document.getElementById('winRateNeeded').innerText = winRateNeeded.toFixed(0) + '%';
-            document.getElementById('profitFactor').innerText = rrRatio.toFixed(2);
-            const expValue = (rrRatio * 0.5) - (1 * 0.5);
-            document.getElementById('expValue').innerText = '$' + (expValue * riskAmount).toFixed(0);
+            document.getElementById('resTargetPrice').innerText = target > 0 ? target.toFixed(4) : "0.00";
+            document.getElementById('resProfit').innerText = formatMoney(profit);
+            document.getElementById('resTargetPct').innerText = pctMove > 0 ? pctMove.toFixed(2) + "%" : "0.00%";
         }
 
         function formatMoney(num) {
             return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // Initialize
-        calculate();
+        // Initialize state
+        updateRiskFromPercent();
+        evaluateChecklist();
+
     </script>
 </body>
 </html>
