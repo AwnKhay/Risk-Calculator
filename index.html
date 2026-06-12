@@ -3,212 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Trade Risk Calculator</title>
+    <title>SFCᴴ Trade Auditor & Risk Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        :root { --bg-dark: #0f172a; --card-bg: #1e293b; --border: #334155; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: #e2e8f0; }
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
-        .input-group label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 4px; display: block; }
-        input[type="number"], input[type="text"], input[type="date"], select {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: white;
-            transition: all 0.2s;
-            width: 100%;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
+        /* Inputs */
+        .input-group label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 4px; display: block; }
+        input[type="number"], input[type="text"], input[type="date"], select, textarea {
+            background-color: var(--card-bg); border: 1px solid var(--border); color: white;
+            width: 100%; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-size: 0.9rem; transition: all 0.2s;
         }
-        input:focus, select:focus {
-            border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
         
-        .result-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #334155; }
-        
-        /* Checkbox styling */
-        .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px; cursor: pointer; }
-        .check-item input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #3b82f6; cursor: pointer; }
-        .check-item:hover { color: white; }
+        /* Checklist Items */
+        .sfc-check { display: flex; align-items: flex-start; gap: 8px; font-size: 0.75rem; color: #cbd5e1; margin-bottom: 6px; cursor: pointer; line-height: 1.3; }
+        .sfc-check input { width: 14px; height: 14px; margin-top: 1px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; }
+        .sfc-check:hover { color: white; }
 
-        /* Tabs */
-        .tab-btn { padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; }
-        .tab-active { background-color: #3b82f6; color: white; }
-        .tab-inactive { background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-        .tab-inactive:hover { background-color: #334155; color: white; }
+        /* Mindset Footer Styling */
+        .mindset-footer {
+            background: linear-gradient(to right, #1e293b, #0f172a);
+            border-top: 1px solid #334155;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .mindset-quote { font-style: italic; color: #94a3b8; font-size: 0.85rem; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        .mindset-highlight { color: #3b82f6; font-weight: 600; font-style: normal; }
+        .mindset-warning { color: #f59e0b; font-weight: 600; font-style: normal; }
+
+        /* Print Optimization - PERFECT A4 FIT */
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background: white !important; color: black !important; font-size: 9pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-break { page-break-before: always; }
+            
+            /* Reset backgrounds for print */
+            .bg-slate-800, .bg-slate-900, .result-card, input, select, textarea { 
+                background: white !important; border: 1px solid #ddd !important; color: black !important; box-shadow: none !important; 
+            }
+            .text-white, .text-slate-400, .text-blue-500, .text-red-400, .text-emerald-400, .text-yellow-400 { color: black !important; }
+            h1, h2, h3, h4 { color: black !important; }
+            
+            /* Compact Grid for Print */
+            .grid { gap: 8px !important; }
+            .print-col-span-12 { grid-column: span 12 / span 12 !important; }
+            .container, .max-w-7xl { max-width: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            
+            /* Force compact spacing */
+            .p-6 { padding: 0.75rem !important; }
+            .mb-6, .mt-6 { margin-bottom: 0.5rem !important; margin-top: 0.5rem !important; }
+            .space-y-4 > * + * { margin-top: 0.5rem !important; }
+            
+            /* Ensure checklist fits */
+            .sfc-check { margin-bottom: 2px !important; font-size: 8pt !important; }
+            .checklist-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; }
+
+            /* PRINT FOOTER STYLING */
+            .mindset-footer {
+                background: white !important;
+                border-top: 2px solid black !important;
+                margin-top: 1rem !important;
+                padding: 0.5rem 0 !important;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+            .mindset-quote { color: black !important; font-size: 8pt !important; font-weight: 500; }
+            .mindset-highlight, .mindset-warning { color: black !important; text-decoration: underline; }
+        }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-4 md:p-6 flex flex-col">
 
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Risk Manager <span class="text-blue-500">Pro</span></h1>
-                <p class="text-slate-400 text-sm mt-1">Structure, Calculate & Execute</p>
+    <!-- SETTINGS MODAL (Hidden by default) -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center no-print">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 max-w-md w-full">
+            <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-cog mr-2"></i>Google Sheets Integration</h3>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>Apps Script Web App URL</label>
+                    <input type="text" id="gsheetUrl" placeholder="https://script.google.com/macros/s/.../exec">
+                </div>
+                <p class="text-xs text-slate-400">Paste your deployed Web App URL here. Data will be sent to this sheet.</p>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="saveSettings()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold">Save & Close</button>
+                    <button onclick="toggleSettings()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded">Cancel</button>
+                </div>
             </div>
-            <div class="text-left md:text-right bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
-                <div class="text-xs text-slate-500 uppercase tracking-wide">Current Account Status</div>
-                <div class="text-xl font-bold text-white" id="header-funds">$0.00</div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto w-full flex-grow">
+        
+        <!-- HEADER WITH MINDSET SUBTITLE -->
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+            <div>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight">SFCᴴ <span class="text-blue-500">Trade Auditor</span></h1>
+                <p class="text-blue-300/80 text-xs mt-1 font-medium tracking-wide max-w-2xl">
+                    "Market is always right. My job is to align myself with what the market is doing, NOT what I wish it would do."
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="toggleSettings()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 text-sm">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 text-right">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wide">Account Balance</div>
+                    <div class="text-lg font-bold text-white" id="header-funds">$0.00</div>
+                </div>
             </div>
         </header>
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <div class="xl:col-span-8 space-y-6">
+            <!-- LEFT COLUMN: INPUTS -->
+            <div class="xl:col-span-8 space-y-6 print-col-span-12">
                 
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Account & Risk
+                <!-- MONEY MANAGEMENT -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h2 class="text-sm font-bold text-white mb-4 flex items-center uppercase tracking-wider">
+                        <i class="fas fa-wallet w-4 h-4 mr-2 text-blue-500"></i> Money Management
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="input-group col-span-2 md:col-span-1">
+                            <label>Balance ($)</label>
+                            <input type="number" id="balance" placeholder="10000" oninput="calculate()">
+                        </div>
                         <div class="input-group">
-                            <label>Account Balance (Deposit)</label>
-                            <div class="relative mt-1">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
-                                <input type="number" id="balance" style="padding-left: 2rem !important;" placeholder="10000" oninput="calculate()">
-                            </div>
+                            <label>Risk %</label>
+                            <input type="number" id="riskPercentInput" value="1.0" step="0.1" min="0.1" max="100" oninput="updateRiskFromPercent()">
                         </div>
                         <div class="input-group">
                             <label>Risk Amount ($)</label>
-                            <div class="relative mt-1">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
-                                <input type="number" id="riskAmount" style="padding-left: 2rem !important;" placeholder="Auto" oninput="updateRiskFromAmount()">
-                            </div>
+                            <input type="number" id="riskAmount" placeholder="Auto" oninput="updateRiskFromAmount()">
                         </div>
-                        <div class="input-group md:col-span-2">
-                            <label>Risk Per Trade (%)</label>
-                            <div class="relative mt-2">
-                                <input type="range" id="riskPercentRange" min="0.1" max="20" step="0.1" value="3.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateRiskFromPercent()">
-                                <div class="flex justify-between mt-2">
-                                    <span class="text-xs text-slate-500">0.1%</span>
-                                    <span class="text-sm font-bold text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded" id="riskPercentDisplay">1.0%</span>
-                                    <span class="text-xs text-slate-500">20%</span>
-                                </div>
-                            </div>
+                        <div class="input-group">
+                            <label>Date</label>
+                            <input type="date" id="tradeDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center justify-between flex-wrap gap-2">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                            Pre-Trade Checklist
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <select id="htfSelect" class="w-24 py-1 px-2">
-                                <option disabled>HTF</option>
-                                <option value="15m">15m</option>
-                                <option value="30m">30m</option>
-                                <option value="1h" selected>1h</option>
-                                <option value="2h">2h</option>
-                                <option value="4h">4h</option>
-                                <option value="1D">1D</option>
-                                <option value="1W">1W</option>
-                                <option value="1M">1M</option>
-                            </select>
-                            <select id="ltfSelect" class="w-24 py-1 px-2">
-                                <option disabled>LTF</option>
-                                <option value="1m">1m</option>
-                                <option value="3m" selected>3m</option>
-                                <option value="5m">5m</option>
-                                <option value="15m">15m</option>
-                            </select>
-                        </div>
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                        <div>
-                            <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-900/50 pb-1">BULLISH ALIGNMENT</h3>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Major Trend HTF is UP</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>LTF Aligned with HTF</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Near Support / Lower Channel Band</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Closed Above EMA</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Closed Above DMA (Green)</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Strong Bull Bar State</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Price Momentum Divergent (Bullish)</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>CVD: Buy Side Dominant</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>CVD Momentum Divergent</span></label>
-                            <label class="check-item"><input type="checkbox" class="bull-check" onchange="evaluateChecklist()"> <span>Recent Price Action Occurred</span></label>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-red-400 mb-3 border-b border-red-900/50 pb-1">BEARISH ALIGNMENT</h3>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Major Trend HTF is DOWN</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>LTF Aligned with HTF</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Near Resistance / Upper Channel Band</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Closed Below EMA</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Closed Below DMA (Red)</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Strong Bear Bar State</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Price Momentum Divergent (Bearish)</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>CVD: Sell Side Dominant</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>CVD Crossing 0 Line</span></label>
-                            <label class="check-item"><input type="checkbox" class="bear-check" onchange="evaluateChecklist()"> <span>Recent Price Action Occurred</span></label>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 bg-slate-900/80 p-4 rounded-lg border border-slate-700">
-                        <h3 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Evaluation Summary</h3>
-                        <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
-                            <div class="flex gap-6">
-                                <div class="text-center">
-                                    <div class="text-xs text-slate-500 mb-1">Bullish Score</div>
-                                    <div class="text-xl font-bold text-emerald-400" id="bullScore">0/10</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="text-xs text-slate-500 mb-1">Bearish Score</div>
-                                    <div class="text-xl font-bold text-red-400" id="bearScore">0/10</div>
-                                </div>
-                            </div>
-                            <div class="text-center sm:text-right w-full sm:w-auto mt-2 sm:mt-0 bg-slate-800 px-4 py-2 rounded border border-slate-700/50">
-                                <div class="text-xs text-slate-500">System Verdict</div>
-                                <div class="text-md font-bold text-slate-400" id="checklistVerdict">Awaiting Input...</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 class="text-lg font-semibold text-white flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            Trade Setup
+                <!-- POSITION SIZING -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-white flex items-center uppercase tracking-wider">
+                            <i class="fas fa-crosshairs w-4 h-4 mr-2 text-purple-500"></i> Position Setup
                         </h2>
-                        <div class="flex gap-2">
-                            <button id="btnCFD" class="tab-btn tab-active" onclick="switchMode('cfd')">CFD / Margin</button>
-                            <button id="btnSpot" class="tab-btn tab-inactive" onclick="switchMode('spot')">Spot Trading</button>
+                        <div class="flex gap-2 no-print">
+                            <button id="btnCFD" class="px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white" onclick="switchMode('cfd')">CFD / Margin</button>
+                            <button id="btnSpot" class="px-3 py-1 rounded text-xs font-bold bg-slate-700 text-slate-400" onclick="switchMode('spot')">Spot Crypto</button>
                         </div>
                     </div>
 
+                    <!-- CFD MODE -->
                     <div id="modeCFD" class="space-y-4 block">
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <div class="input-group col-span-2 md:col-span-1">
-                                <label>Asset Pair</label>
+                                <label>Symbol</label>
                                 <input type="text" id="cfdPair" list="cfdPairs" class="uppercase" placeholder="XAUUSD" value="XAUUSD" onchange="autoFillSpread(); calculate()">
-                                <datalist id="cfdPairs">
-                                    <option value="XAUUSD">
-                                    <option value="BTCUSD">
-                                    <option value="EURUSD">
-                                </datalist>
+                                <datalist id="cfdPairs"><option value="XAUUSD"><option value="BTCUSD"><option value="EURUSD"><option value="GBPUSD"></datalist>
                             </div>
                             <div class="input-group">
                                 <label>Direction</label>
                                 <select id="cfdDirection" onchange="calculate()">
-                                    <option value="long">Long</option>
-                                    <option value="short">Short</option>
+                                    <option value="long">Long (Buy)</option>
+                                    <option value="short">Short (Sell)</option>
                                 </select>
                             </div>
                             <div class="input-group">
                                 <label>Leverage</label>
-                                <div class="relative mt-1">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
-                                    <input type="number" id="cfdLeverage" value="100" step="1" style="padding-left: 2.2rem !important;" oninput="calculate()">
-                                </div>
+                                <input type="number" id="cfdLeverage" value="100" step="1" oninput="calculate()">
                             </div>
                             <div class="input-group">
                                 <label>Spread</label>
@@ -216,14 +193,10 @@
                             </div>
                             <div class="input-group">
                                 <label>Target R:R</label>
-                                <div class="relative mt-1">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
-                                    <input type="number" id="cfdRR" value="2" step="0.1" style="padding-left: 2.2rem !important;" oninput="calculate()">
-                                </div>
+                                <input type="number" id="cfdRR" value="2" step="0.1" oninput="calculate()">
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <div class="grid grid-cols-2 gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
                             <div class="input-group">
                                 <label class="text-blue-400">Entry Price</label>
                                 <input type="number" id="cfdEntry" placeholder="0.00" oninput="calculate()">
@@ -235,10 +208,11 @@
                         </div>
                     </div>
 
+                    <!-- SPOT MODE -->
                     <div id="modeSpot" class="space-y-4 hidden">
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <div class="input-group">
-                                <label>Asset Pair</label>
+                                <label>Symbol</label>
                                 <input type="text" id="spotPair" class="uppercase" placeholder="SOL/USDT">
                             </div>
                             <div class="input-group">
@@ -250,136 +224,240 @@
                             </div>
                             <div class="input-group">
                                 <label>Target R:R</label>
-                                <div class="relative mt-1">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">1:</span>
-                                    <input type="number" id="spotRR" value="2" step="0.1" style="padding-left: 2.2rem !important;" oninput="calculate()">
-                                </div>
+                                <input type="number" id="spotRR" value="2" step="0.1" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>ATR Mult</label>
+                                <input type="number" id="spotMult" value="2" step="0.1" oninput="calculate()">
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <div class="grid grid-cols-3 gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
                             <div class="input-group">
                                 <label class="text-blue-400">Entry Price</label>
                                 <input type="number" id="spotEntry" placeholder="0.00" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>Previous Low/High</label>
+                                <label>Prev Low/High</label>
                                 <input type="number" id="spotPrev" placeholder="0.00" oninput="calculate()">
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
                             <div class="input-group">
                                 <label>ATR Value</label>
                                 <input type="number" id="spotATR" placeholder="0.00" oninput="calculate()">
                             </div>
-                            <div class="input-group">
-                                <label>ATR Multiplier</label>
-                                <input type="number" id="spotMult" value="2" step="0.1" oninput="calculate()">
-                            </div>
                         </div>
-                        <div class="bg-slate-700/30 p-3 rounded text-center border border-slate-600">
-                            <span class="text-xs text-slate-400 uppercase">Calculated Stop Loss</span>
+                        <div class="bg-slate-700/30 p-2 rounded text-center border border-slate-600">
+                            <span class="text-[10px] text-slate-400 uppercase">Calculated Stop Loss</span>
                             <div class="text-lg font-bold text-red-400" id="spotCalcSL">0.00</div>
                         </div>
                     </div>
+                </div>
 
+                <!-- SFCᴴ ALIGNMENT CHECKLIST -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg print-break">
+                    <h2 class="text-sm font-bold text-white mb-4 flex items-center justify-between uppercase tracking-wider">
+                        <div class="flex items-center"><i class="fas fa-list-check w-4 h-4 mr-2 text-emerald-500"></i> SFCᴴ Dashboard Alignment</div>
+                        <div class="text-xs font-normal text-slate-400 no-print">Match your indicator dashboard</div>
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 checklist-grid bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <!-- STRUCTURE -->
+                        <div>
+                            <h3 class="text-[10px] font-bold text-blue-400 mb-2 border-b border-blue-900/50 pb-1 uppercase">HTF Structure & Regime</h3>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="struct" onchange="evaluateChecklist()"> <span>HTF Structure: Bull/Bear Aligned?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="struct" onchange="evaluateChecklist()"> <span>Price vs Cloud: Above/Below Body?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="struct" onchange="evaluateChecklist()"> <span>Regime: TREND (Not Range/Chop)?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="struct" onchange="evaluateChecklist()"> <span>LTF Trend: Aligned with HTF?</span></label>
+                        </div>
+                        <!-- MOMENTUM -->
+                        <div>
+                            <h3 class="text-[10px] font-bold text-purple-400 mb-2 border-b border-purple-900/50 pb-1 uppercase">Momentum & Flow</h3>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="mom" onchange="evaluateChecklist()"> <span>Fast DMA: Flipped in Direction?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="mom" onchange="evaluateChecklist()"> <span>CVD Snap: Sync (Not Divergent)?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="mom" onchange="evaluateChecklist()"> <span>Liq Sweep: Recent Event (<20 bars)?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="mom" onchange="evaluateChecklist()"> <span>PA Signal: ★ / ➌ / Ⓟ Confirmed?</span></label>
+                        </div>
+                        <!-- EXECUTION -->
+                        <div>
+                            <h3 class="text-[10px] font-bold text-yellow-400 mb-2 border-b border-yellow-900/50 pb-1 uppercase">Execution Gate</h3>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="exec" onchange="evaluateChecklist()"> <span>Quality Score: ≥ 5/8?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="exec" onchange="evaluateChecklist()"> <span>Action: PRIME / STRONG Entry?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="exec" onchange="evaluateChecklist()"> <span>Counter-Trend: CTR ON (if applicable)?</span></label>
+                            <label class="sfc-check"><input type="checkbox" class="align-check" data-cat="exec" onchange="evaluateChecklist()"> <span>Session: Active Trading Window?</span></label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/80 p-3 rounded-lg border border-slate-700">
+                        <div class="flex items-center gap-4">
+                            <div class="text-center">
+                                <div class="text-[10px] text-slate-500 uppercase">Checked</div>
+                                <div class="text-xl font-bold text-blue-400" id="totalChecked">0/12</div>
+                            </div>
+                            <div class="h-8 w-px bg-slate-700"></div>
+                            <div class="text-center">
+                                <div class="text-[10px] text-slate-500 uppercase">Verdict</div>
+                                <div class="text-sm font-bold text-slate-400" id="checklistVerdict">Awaiting...</div>
+                            </div>
+                        </div>
+                        <label class="sfc-check mb-0"><input type="checkbox" id="systemAligned"> <span class="font-bold text-white text-xs">A+ SETUP CONFIRMED</span></label>
+                    </div>
+                </div>
+
+                <!-- PSYCHOLOGY AUDIT -->
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                    <h2 class="text-sm font-bold text-white mb-4 flex items-center uppercase tracking-wider">
+                        <i class="fas fa-brain w-4 h-4 mr-2 text-yellow-500"></i> C.A.L.M Psychology Audit
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                                <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-2">Emotion State at Entry</h3>
+                                <label class="sfc-check"><input type="radio" name="emotion" value="calm"> <span class="text-emerald-400">Completely Calm</span></label>
+                                <label class="sfc-check"><input type="radio" name="emotion" value="fomo"> <span class="text-red-400">Rush / FOMO</span></label>
+                                <label class="sfc-check mb-0"><input type="radio" name="emotion" value="recover"> <span class="text-red-400">Recovering Loss</span></label>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                                <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-2">C.A.L.M System</h3>
+                                <label class="sfc-check"><input type="checkbox" id="auditC"> <span><strong>C</strong> - Context Clear?</span></label>
+                                <label class="sfc-check"><input type="checkbox" id="auditA"> <span><strong>A</strong> - A+ Setup?</span></label>
+                                <label class="sfc-check"><input type="checkbox" id="auditL"> <span><strong>L</strong> - Loss Defined?</span></label>
+                                <label class="sfc-check mb-0"><input type="checkbox" id="auditM"> <span><strong>M</strong> - Mind Calm?</span></label>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 text-xs text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                            <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-2">Mindset Gate (All Must Be YES)</h3>
+                            <label class="flex justify-between items-center gap-3 cursor-pointer hover:text-white">
+                                <span>Taking trade because criteria met (not boredom)?</span>
+                                <input type="checkbox" class="w-4 h-4 accent-blue-500 flex-shrink-0" id="psych1">
+                            </label>
+                            <hr class="border-slate-700/50">
+                            <label class="flex justify-between items-center gap-3 cursor-pointer hover:text-white">
+                                <span>Can accept full loss without emotional damage?</span>
+                                <input type="checkbox" class="w-4 h-4 accent-blue-500 flex-shrink-0" id="psych2">
+                            </label>
+                            <hr class="border-slate-700/50">
+                            <label class="flex justify-between items-center gap-3 cursor-pointer hover:text-white">
+                                <span>Will take next valid setup if this loses?</span>
+                                <input type="checkbox" class="w-4 h-4 accent-blue-500 flex-shrink-0" id="psych3">
+                            </label>
+                            <hr class="border-slate-700/50">
+                            <label class="flex justify-between items-center gap-3 cursor-pointer hover:text-white">
+                                <span>Happy with process regardless of outcome?</span>
+                                <input type="checkbox" class="w-4 h-4 accent-blue-500 flex-shrink-0" id="psych4">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Trade Notes / Reasoning</label>
+                        <textarea id="tradeNotes" rows="2" placeholder="Setup details, confluence reasons, mental state..." class="text-xs"></textarea>
+                    </div>
                 </div>
             </div>
 
-            <div class="xl:col-span-4 space-y-4">
-                
-                <div class="result-card rounded-xl p-6 sticky top-4">
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-slate-700 pb-2">Execution Summary</h3>
+            <!-- RIGHT COLUMN: RESULTS -->
+            <div class="xl:col-span-4 space-y-4 print-col-span-12">
+                <div class="result-card rounded-xl p-5 sticky top-4 border border-slate-700">
+                    <h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-4 border-b border-slate-700 pb-2">Execution Summary</h3>
                     
-                    <div class="mb-6 bg-slate-900/80 p-4 rounded-xl border border-blue-900/50">
-                        <label class="text-xs text-slate-400 uppercase mb-1 block">Position Size (Units / Lots)</label>
+                    <div class="mb-5 bg-slate-900/80 p-4 rounded-xl border border-blue-900/50">
+                        <label class="text-[10px] text-slate-400 uppercase mb-1 block">Position Size (Units/Lots)</label>
                         <input type="number" id="resSize" class="text-3xl font-bold text-white bg-transparent border-none p-0 focus:ring-0 w-full" value="0.00" oninput="reverseCalculate()">
-                        <div class="text-xs text-slate-500 mt-1 mb-3 flex items-center">
-                            <i class="fas fa-edit mr-1"></i> Edit this to override risk
-                        </div>
+                        <div class="text-[10px] text-slate-500 mt-1 flex items-center no-print"><i class="fas fa-edit mr-1"></i> Edit to override risk</div>
                         
                         <div class="pt-3 border-t border-slate-700/50 flex justify-between items-center" id="marginBlock">
-                            <span class="text-xs text-slate-400 uppercase">Margin Required</span>
+                            <span class="text-[10px] text-slate-400 uppercase">Margin Required</span>
                             <span class="text-sm font-bold text-yellow-400" id="resMarginReq">$0.00</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="grid grid-cols-2 gap-3 mb-5">
                         <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                            <div class="text-xs text-slate-400">Risk Amount</div>
+                            <div class="text-[10px] text-slate-400 uppercase">Risk $</div>
                             <div class="text-lg font-bold text-red-400" id="resRiskAmount">$0.00</div>
                         </div>
                         <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                            <div class="text-xs text-slate-400">Risk %</div>
+                            <div class="text-[10px] text-slate-400 uppercase">Risk %</div>
                             <div class="text-lg font-bold text-white" id="resRiskPercent">0.00%</div>
                         </div>
                     </div>
 
                     <hr class="border-slate-700 my-4">
 
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         <div>
-                            <span class="text-xs text-slate-400 uppercase tracking-wider">Target Price (Take Profit)</span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">Target Price (TP)</span>
                             <div class="text-2xl font-bold text-emerald-400 mt-1" id="resTargetPrice">0.00</div>
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-xs text-slate-500">Reward / Profit</span>
-                                <div class="text-md font-mono text-emerald-400" id="resProfit">$0.00</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                                <span class="text-[10px] text-slate-500 uppercase">Reward $</span>
+                                <div class="text-base font-mono text-emerald-400" id="resProfit">$0.00</div>
                             </div>
-                            <div>
-                                <span class="text-xs text-slate-500">Target % Move (to hit TP)</span>
-                                <div class="text-md font-mono text-emerald-400" id="resTargetPct">0.00%</div>
+                            <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                                <span class="text-[10px] text-slate-500 uppercase">Move %</span>
+                                <div class="text-base font-mono text-emerald-400" id="resTargetPct">0.00%</div>
                             </div>
                         </div>
-                        
-                        <div>
-                            <span class="text-xs text-slate-500">Stop Loss Distance</span>
-                            <div class="text-md font-mono text-red-400" id="resSLDist">0.00</div>
+                        <div class="flex justify-between items-center border-t border-slate-700 pt-3">
+                            <span class="text-[10px] text-slate-500 uppercase">SL Distance</span>
+                            <span class="text-sm font-mono text-red-400" id="resSLDist">0.00</span>
                         </div>
                     </div>
 
-                    <button class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2" onclick="alert('Trade Data ready for Google Sheets API!')">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                        Export Setup
-                    </button>
+                    <div class="mt-6 space-y-3 no-print">
+                        <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-sm" onclick="exportToCSV()">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-sm" onclick="sendToGoogleSheet()">
+                            <i class="fab fa-google"></i> Send to Google Sheet
+                        </button>
+                        <button class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-sm" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print A4 Audit Sheet
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- State Management ---
-        let currentMode = 'cfd'; // 'cfd' or 'spot'
-        let balance = 0;
-        let riskPercent = 1.0;
-        let riskAmount = 0;
-        
-        let calculatedDistance = 0;
-        let isReverseCalculating = false;
+    <!-- MINDSET CONTRACT FOOTER -->
+    <footer class="mindset-footer no-print-screen">
+        <p class="mindset-quote">
+            <span class="mindset-highlight">Missed trades cost nothing.</span> 
+            <span class="mindset-warning">Forced trades cost money.</span> 
+            Be the Best Loser to Win. <br class="hidden md:block">
+            I acknowledge that my edge lies in discipline, not prediction. I accept the risk defined above completely.
+        </p>
+    </footer>
 
-        // --- Core UI Functions ---
+    <script>
+        // --- INITIALIZATION ---
+        document.getElementById('tradeDate').valueAsDate = new Date();
+        let currentMode = 'cfd';
+        let balance = 0, riskPercent = 1.0, riskAmount = 0, calculatedDistance = 0, isReverseCalculating = false;
+
+        // Load saved GSheet URL
+        document.getElementById('gsheetUrl').value = localStorage.getItem('sfc_gsheet_url') || '';
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+        function saveSettings() {
+            localStorage.setItem('sfc_gsheet_url', document.getElementById('gsheetUrl').value);
+            toggleSettings();
+            alert('Settings saved!');
+        }
+
+        // --- MODE SWITCHING ---
         function switchMode(mode) {
             currentMode = mode;
-            
-            const btnCFD = document.getElementById('btnCFD');
-            const btnSpot = document.getElementById('btnSpot');
-            const secCFD = document.getElementById('modeCFD');
-            const secSpot = document.getElementById('modeSpot');
-
-            if (mode === 'cfd') {
-                btnCFD.className = 'tab-btn tab-active';
-                btnSpot.className = 'tab-btn tab-inactive';
-                secCFD.style.display = 'block';
-                secSpot.style.display = 'none';
-            } else {
-                btnCFD.className = 'tab-btn tab-inactive';
-                btnSpot.className = 'tab-btn tab-active';
-                secCFD.style.display = 'none';
-                secSpot.style.display = 'block';
-            }
+            document.getElementById('btnCFD').className = mode === 'cfd' ? 'px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded text-xs font-bold bg-slate-700 text-slate-400';
+            document.getElementById('btnSpot').className = mode === 'spot' ? 'px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded text-xs font-bold bg-slate-700 text-slate-400';
+            document.getElementById('modeCFD').style.display = mode === 'cfd' ? 'block' : 'none';
+            document.getElementById('modeSpot').style.display = mode === 'spot' ? 'block' : 'none';
             calculate();
         }
 
@@ -388,50 +466,30 @@
             const spreadInput = document.getElementById('cfdSpread');
             if (pair.includes('XAU')) spreadInput.value = 0.28;
             else if (pair.includes('BTC')) spreadInput.value = 0.14;
+            else if (pair.includes('EUR') || pair.includes('GBP')) spreadInput.value = 0.0002;
         }
 
-        // --- Checklist Evaluation ---
+        // --- CHECKLIST ENGINE ---
         window.evaluateChecklist = function() {
-            const bullScore = document.querySelectorAll('.bull-check:checked').length;
-            const bearScore = document.querySelectorAll('.bear-check:checked').length;
-            
-            document.getElementById('bullScore').innerText = bullScore + '/10';
-            document.getElementById('bearScore').innerText = bearScore + '/10';
+            const checked = document.querySelectorAll('.align-check:checked').length;
+            const total = document.querySelectorAll('.align-check').length;
+            document.getElementById('totalChecked').innerText = `${checked}/${total}`;
+            document.getElementById('systemAligned').checked = (checked >= 10);
             
             const verdict = document.getElementById('checklistVerdict');
-            
-            if (bullScore === 0 && bearScore === 0) {
-                verdict.innerHTML = 'Awaiting Input...';
-                verdict.className = 'text-md font-bold text-slate-400';
-            } else if (bullScore >= 7 && bearScore <= 3) {
-                verdict.innerHTML = 'Strong Long Bias ✅';
-                verdict.className = 'text-md font-bold text-emerald-400';
-            } else if (bearScore >= 7 && bullScore <= 3) {
-                verdict.innerHTML = 'Strong Short Bias ✅';
-                verdict.className = 'text-md font-bold text-red-400';
-            } else if (bullScore > bearScore && bullScore >= 5) {
-                verdict.innerHTML = 'Leaning Bullish ↗️';
-                verdict.className = 'text-md font-bold text-emerald-300';
-            } else if (bearScore > bullScore && bearScore >= 5) {
-                verdict.innerHTML = 'Leaning Bearish ↘️';
-                verdict.className = 'text-md font-bold text-red-300';
-            } else {
-                verdict.innerHTML = 'Mixed / Choppy 🛑';
-                verdict.className = 'text-md font-bold text-yellow-400';
-            }
+            if (checked >= 10) { verdict.innerText = "A+ SETUP ✅"; verdict.className = "text-sm font-bold text-emerald-400"; }
+            else if (checked >= 7) { verdict.innerText = "Strong Bias ↗️"; verdict.className = "text-sm font-bold text-blue-400"; }
+            else if (checked >= 4) { verdict.innerText = "Marginal ⚠️"; verdict.className = "text-sm font-bold text-yellow-400"; }
+            else { verdict.innerText = "No Edge 🛑"; verdict.className = "text-sm font-bold text-red-400"; }
         };
 
-        // --- Risk Functions ---
+        // --- RISK ENGINE ---
         function updateRiskFromPercent() {
             if(isReverseCalculating) return;
-            const range = document.getElementById('riskPercentRange');
-            riskPercent = parseFloat(range.value);
-            document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
-            
+            riskPercent = parseFloat(document.getElementById('riskPercentInput').value) || 0;
             balance = parseFloat(document.getElementById('balance').value) || 0;
             riskAmount = balance * (riskPercent / 100);
             document.getElementById('riskAmount').value = riskAmount.toFixed(2);
-            
             calculate();
         }
 
@@ -439,33 +497,25 @@
             if(isReverseCalculating) return;
             balance = parseFloat(document.getElementById('balance').value) || 0;
             riskAmount = parseFloat(document.getElementById('riskAmount').value) || 0;
-
             if(balance > 0) {
                 riskPercent = (riskAmount / balance) * 100;
-                document.getElementById('riskPercentRange').value = Math.min(riskPercent, 20);
-                document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(1) + '%';
+                document.getElementById('riskPercentInput').value = riskPercent.toFixed(2);
             }
             calculate();
         }
 
-        // --- Reverse Calculation (Lot Size Override) ---
         function reverseCalculate() {
             isReverseCalculating = true;
             balance = parseFloat(document.getElementById('balance').value) || 0;
             const customSize = parseFloat(document.getElementById('resSize').value) || 0;
-
             if(calculatedDistance > 0) {
                 riskAmount = customSize * calculatedDistance;
                 document.getElementById('riskAmount').value = riskAmount.toFixed(2);
-                
                 if(balance > 0) {
                     riskPercent = (riskAmount / balance) * 100;
-                    document.getElementById('riskPercentRange').value = Math.min(riskPercent, 20);
-                    document.getElementById('riskPercentDisplay').innerText = riskPercent.toFixed(2) + '%';
+                    document.getElementById('riskPercentInput').value = riskPercent.toFixed(2);
                 }
             }
-            
-            // Re-fetch variables to pass safely to UI update
             let entry = 0, rr = 2, direction = 'long', leverage = 1;
             if (currentMode === 'cfd') {
                 entry = parseFloat(document.getElementById('cfdEntry').value) || 0;
@@ -476,24 +526,14 @@
                 entry = parseFloat(document.getElementById('spotEntry').value) || 0;
                 rr = parseFloat(document.getElementById('spotRR').value) || 2;
                 direction = document.getElementById('spotDirection').value;
-                leverage = 1;
             }
-
             calculateUI(customSize, entry, rr, direction, leverage);
             isReverseCalculating = false;
         }
 
-        // --- Main Calculation Engine ---
         function calculate() {
             if(isReverseCalculating) return;
-            
             balance = parseFloat(document.getElementById('balance').value) || 0;
-            
-            if(document.activeElement.id === 'balance') {
-                riskAmount = balance * (parseFloat(document.getElementById('riskPercentRange').value) / 100);
-                document.getElementById('riskAmount').value = riskAmount.toFixed(2);
-            }
-
             let entry = 0, sl = 0, rr = 2, direction = 'long', leverage = 1;
             calculatedDistance = 0;
             
@@ -504,100 +544,151 @@
                 rr = parseFloat(document.getElementById('cfdRR').value) || 2;
                 direction = document.getElementById('cfdDirection').value;
                 leverage = parseFloat(document.getElementById('cfdLeverage').value) || 1;
-
-                if (entry > 0 && sl > 0) {
-                    calculatedDistance = Math.abs(entry - sl) + spread;
-                }
-
-            } else if (currentMode === 'spot') {
+                if (entry > 0 && sl > 0) calculatedDistance = Math.abs(entry - sl) + spread;
+            } else {
                 entry = parseFloat(document.getElementById('spotEntry').value) || 0;
                 const prevLevel = parseFloat(document.getElementById('spotPrev').value) || 0;
                 const atr = parseFloat(document.getElementById('spotATR').value) || 0;
                 const atrMult = parseFloat(document.getElementById('spotMult').value) || 0;
                 rr = parseFloat(document.getElementById('spotRR').value) || 2;
                 direction = document.getElementById('spotDirection').value;
-                leverage = 1; // Spot has no leverage
-
                 if (entry > 0 && prevLevel > 0 && atr > 0) {
                     sl = direction === 'long' ? (prevLevel - (atr * atrMult)) : (prevLevel + (atr * atrMult));
                     document.getElementById('spotCalcSL').innerText = sl.toFixed(4);
                     calculatedDistance = Math.abs(entry - sl);
-                } else {
-                    document.getElementById('spotCalcSL').innerText = "0.00";
                 }
             }
 
-            let positionSize = 0;
-            if (calculatedDistance > 0 && riskAmount > 0) {
-                positionSize = riskAmount / calculatedDistance;
-            }
-
+            let positionSize = (calculatedDistance > 0 && riskAmount > 0) ? riskAmount / calculatedDistance : 0;
             document.getElementById('resSize').value = positionSize > 0 ? positionSize.toFixed(4) : "0.00";
-            
             calculateUI(positionSize, entry, rr, direction, leverage);
         }
 
-        // --- Updates Results HTML ---
         function calculateUI(positionSize, entry, rr, direction, leverage) {
             const safeSize = positionSize || 0;
-            
             document.getElementById('header-funds').innerText = formatMoney(balance);
             document.getElementById('resRiskAmount').innerText = formatMoney(riskAmount);
             document.getElementById('resRiskPercent').innerText = (balance > 0 ? (riskAmount/balance)*100 : 0).toFixed(2) + "%";
             document.getElementById('resSLDist').innerText = calculatedDistance > 0 ? calculatedDistance.toFixed(4) : "0.00";
 
-            let target = 0;
-            let profit = 0;
-            let pctMove = 0;
-            let marginReq = 0;
-
+            let target = 0, profit = 0, pctMove = 0, marginReq = 0;
             if(entry > 0 && calculatedDistance > 0 && safeSize > 0) {
                 const targetDistance = calculatedDistance * rr;
-                
-                if(direction === 'long') {
-                    target = entry + targetDistance;
-                    pctMove = ((target - entry) / entry) * 100;
-                } else {
-                    target = entry - targetDistance;
-                    pctMove = ((entry - target) / entry) * 100; 
-                }
-                
+                target = direction === 'long' ? entry + targetDistance : entry - targetDistance;
+                pctMove = direction === 'long' ? ((target - entry) / entry) * 100 : ((entry - target) / entry) * 100;
                 profit = riskAmount * rr;
-                
-                // Calculate Required Margin
-                const totalValue = safeSize * entry;
-                marginReq = totalValue / leverage;
+                marginReq = (safeSize * entry) / leverage;
             }
 
-            // Update Margin Display & Warning
             const marginEl = document.getElementById('resMarginReq');
-            if (marginReq > balance && balance > 0) {
-                marginEl.classList.remove('text-yellow-400');
-                marginEl.classList.add('text-red-500');
-                marginEl.innerHTML = formatMoney(marginReq) + ' <i class="fas fa-exclamation-triangle ml-1" title="Margin exceeds account balance!"></i>';
-            } else {
-                marginEl.classList.remove('text-red-500');
-                marginEl.classList.add('text-yellow-400');
-                marginEl.innerHTML = formatMoney(marginReq);
-            }
-            
-            // Adjust Label Text depending on Spot vs Margin mode
-            const marginBlock = document.getElementById('marginBlock');
-            marginBlock.firstElementChild.innerText = currentMode === 'spot' ? 'Total Position Cost' : 'Margin Required';
-
+            marginEl.innerHTML = formatMoney(marginReq);
+            marginEl.className = (marginReq > balance && balance > 0) ? 'text-sm font-bold text-red-500' : 'text-sm font-bold text-yellow-400';
+            document.getElementById('marginBlock').firstElementChild.innerText = currentMode === 'spot' ? 'Total Cost' : 'Margin Required';
             document.getElementById('resTargetPrice').innerText = target > 0 ? target.toFixed(4) : "0.00";
             document.getElementById('resProfit').innerText = formatMoney(profit);
             document.getElementById('resTargetPct').innerText = pctMove > 0 ? pctMove.toFixed(2) + "%" : "0.00%";
         }
 
-        function formatMoney(num) {
-            return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        function formatMoney(num) { return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+        // --- DATA COLLECTION HELPER ---
+        function collectData() {
+            const symbol = currentMode === 'cfd' ? document.getElementById('cfdPair').value : document.getElementById('spotPair').value;
+            const direction = currentMode === 'cfd' ? document.getElementById('cfdDirection').value : document.getElementById('spotDirection').value;
+            const entry = currentMode === 'cfd' ? document.getElementById('cfdEntry').value : document.getElementById('spotEntry').value;
+            let sl = currentMode === 'cfd' ? document.getElementById('cfdSL').value : document.getElementById('spotCalcSL').innerText;
+            
+            // Checklist Details
+            const checks = {};
+            document.querySelectorAll('.align-check').forEach(cb => {
+                const label = cb.parentElement.querySelector('span').innerText;
+                checks[label] = cb.checked ? "✅" : "❌";
+            });
+            
+            const auditC = document.getElementById('auditC').checked ? "Yes" : "No";
+            const auditA = document.getElementById('auditA').checked ? "Yes" : "No";
+            const auditL = document.getElementById('auditL').checked ? "Yes" : "No";
+            const auditM = document.getElementById('auditM').checked ? "Yes" : "No";
+            const emotion = document.querySelector('input[name="emotion"]:checked')?.value || "Not Set";
+
+            return {
+                date: document.getElementById('tradeDate').value,
+                symbol: symbol,
+                direction: direction.toUpperCase(),
+                mode: currentMode.toUpperCase(),
+                balance: balance,
+                riskPct: riskPercent.toFixed(2),
+                riskAmt: riskAmount.toFixed(2),
+                entry: entry,
+                sl: sl,
+                target: document.getElementById('resTargetPrice').innerText,
+                size: document.getElementById('resSize').value,
+                verdict: document.getElementById('checklistVerdict').innerText,
+                score: document.getElementById('totalChecked').innerText,
+                calm: `${auditC}/${auditA}/${auditL}/${auditM}`,
+                emotion: emotion,
+                notes: document.getElementById('tradeNotes').value,
+                checks: checks
+            };
         }
 
-        // Initialize state
+        // --- EXPORT TO CSV ---
+        function exportToCSV() {
+            const d = collectData();
+            const checkHeaders = Object.keys(d.checks);
+            const checkValues = Object.values(d.checks);
+            
+            const headers = ["Date", "Symbol", "Dir", "Mode", "Balance", "Risk%", "Risk$", "Entry", "SL", "Target", "Size", "Score", "Verdict", "CALM", "Emotion", "Notes", ...checkHeaders];
+            const row = [d.date, d.symbol, d.direction, d.mode, d.balance, d.riskPct, d.riskAmt, d.entry, d.sl, d.target, d.size, d.score, d.verdict, d.calm, d.emotion, `"${d.notes.replace(/"/g, '""')}"`, ...checkValues];
+
+            const csvContent = headers.join(",") + "\n" + row.join(",");
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `SFC_Trade_${d.symbol}_${d.date}.csv`;
+            a.click();
+        }
+
+        // --- SEND TO GOOGLE SHEETS ---
+        async function sendToGoogleSheet() {
+            const url = localStorage.getItem('sfc_gsheet_url');
+            if (!url) { alert('Please configure your Google Sheet URL in Settings first.'); toggleSettings(); return; }
+            
+            const d = collectData();
+            // Flatten checks into a single string for simpler sheet handling
+            const checkSummary = Object.entries(d.checks).map(([k,v]) => `${k}: ${v}`).join(' | ');
+            
+            const payload = {
+                date: d.date, symbol: d.symbol, direction: d.direction, mode: d.mode,
+                balance: d.balance, riskPct: d.riskPct, riskAmt: d.riskAmt,
+                entry: d.entry, sl: d.sl, target: d.target, size: d.size,
+                score: d.score, verdict: d.verdict, calm: d.calm, emotion: d.emotion,
+                notes: d.notes, checklistDetail: checkSummary
+            };
+
+            try {
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors', // Important for Google Apps Script
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                btn.innerHTML = '<i class="fas fa-check"></i> Sent!';
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            } catch (err) {
+                alert('Error sending to sheet. Check URL and deployment settings.');
+                console.error(err);
+            }
+        }
+
+        // Init
         updateRiskFromPercent();
         evaluateChecklist();
-
     </script>
 </body>
 </html>
